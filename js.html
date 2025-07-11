@@ -1,0 +1,1016 @@
+<script>
+  document.addEventListener("click", (event) => {
+    //this is the events listener for the option drop down (this way so the user can dynamically search up patterns)
+    const searchInputs = document.getElementsByClassName("search-input");
+    const optionsLists = document.getElementsByClassName("options-list");
+
+    for (let i = 0; i < searchInputs.length; i++) {
+      if (!searchInputs[i].contains(event.target)) {
+        optionsLists[i].style.display = "none";
+      }
+    }
+  });
+
+  var destinationsObject = {
+    globals: { user: {}, destination: "" },
+    orderpage: {
+      product: {},
+      items: { number: 1 },
+      trackingNumberGroups: { number: 1 },
+    },
+    "home-directory": {},
+    "item-lookup-page": {
+      priceType: "NET",
+      product: {},
+      fees: {},
+      vendorFees: {},
+    },
+    "carpet-sample-page": {
+      items: { number: 1 },
+    },
+    "carpet-sample-page-check-in": {},
+    "looker-studio-reports": {},
+    "rug-product-entry": {},
+    "payment-link-generator-upload": {},
+    "payment-link-generator-submit": {}
+  };
+
+  const defaultStr = "--";
+  /*************************************************** END GLOBALS *******************************************************************************/
+
+  /********************************* SUBMIT FORM **************************************************/
+  function submitForm() {
+    // next:
+    // format some kind of metadata to the elements to identify them and move them to the right place in the transactions log
+    // with this in place, I will be able to run through the headers in the transactions log and apply the values there easily
+    //using data-key as attribute to set the key of the object to be used on the gs side
+
+    const { products } = destinationsObject.orderpage;
+    var form = document.getElementById("order-form");
+    var inputs = form.getElementsByTagName("input");
+    var textareas = form.getElementsByTagName("textarea");
+    var selects = form.getElementsByTagName("select");
+    var formData = {};
+    // var a = inputs;
+
+    [inputs, textareas, selects].forEach((a, index) => {
+      for (let i = 0; i < a.length; i++) {
+        let input = a[i];
+        let inputKey = input.getAttribute("data-key");
+
+        if (input.id.indexOf("temple-code-") > -1)
+          formData[`product-${getElementItemNumber(input.id)}`] =
+            products[input.value];
+
+        formData[inputKey] = { value: input.value, id: input.id };
+      }
+    });
+
+    formData["SUBMITTED BY"] = {
+      value: destinationsObject.globals.user.userEmail,
+      id: "",
+    };
+
+    // console.log(formData);
+
+    google.script.run
+      .withSuccessHandler((response) => {
+        // console.log("SAVE COMPLETE");
+      })
+      .saveOrder(formData);
+  }
+
+  /**************************************** ADD TO SUMMARY (orderpage) **************************************************/
+  function sumTotals() {
+    //get the subtotal
+    const numItems = destinationsObject.orderpage.items.number;
+    var subtotalForAllItems = 0;
+    var cutFeesForAllItems = 0;
+    var otherFeesForAllItems = 0;
+
+    const { products } = destinationsObject.orderpage;
+
+    const subtotalElem = document.getElementById("subtotal");
+    const cutFeesElem = document.getElementById("cut-fees");
+    const otherFeesElem = document.getElementById("other-fees");
+    const freightFeesElem = document.getElementById("freight-total");
+    const salesTaxElem = document.getElementById("total-sales-tax");
+    const orderTotalElem = document.getElementById("order-total");
+    const paymentTotalElem = document.getElementById("payments-list");
+    const balanceDueElem = document.getElementById("balance-due");
+    //loop through however many items there are
+    // console.log({numItems})
+
+    for (let itemNum = 1; itemNum <= numItems; itemNum++) {
+      let itemQuantityElem = document.getElementById(
+        `item-quantity-${itemNum}`
+      );
+      let itemQuantity = itemQuantityElem.value;
+
+      if (!itemQuantity) continue;
+
+      //define item subtotal
+      let unitPriceElem = document.getElementById(`price-unit-cost-${itemNum}`);
+      let unitPriceOverrideElem = document.getElementById(
+        `client-price-${itemNum}`
+      );
+      let overrideRowElem = document.getElementById(
+        `client-price-row-4-${itemNum}`
+      );
+      let unitPrice = extractNumbersFromString(
+        overrideRowElem.style.display == "none"
+          ? unitPriceElem.value
+          : unitPriceOverrideElem.value
+      );
+      unitPrice = isNaN(unitPrice) ? 0 : Number(unitPrice);
+
+      let itemTotal = unitPrice * Number(itemQuantity);
+
+      subtotalForAllItems += itemTotal;
+
+      //define cut fees
+      let templeCodeElem = document.getElementById(`temple-code-${itemNum}`);
+      let templeCode = templeCodeElem.value;
+      let product = products[templeCode];
+      let cutFeeMinQty = Number(product["CUT FEE MINIMUM QTY"]);
+      let cutFeeMinChargeShowroom = product["CUT FEE SHOWROOM CURRENCY"];
+      let cutFee =
+        Number(itemQuantity) < cutFeeMinQty ? cutFeeMinChargeShowroom : 0;
+
+      cutFeesForAllItems += cutFee;
+
+      //define other fees
+      let cfaFeeElem = document.getElementById(`client-cfa-fee-${itemNum}`);
+      let cfaFee = cfaFeeElem.value || 0;
+      let setupFeeElem = document.getElementById(`client-setup-fee-${itemNum}`);
+      let setupFee = setupFeeElem.value || 0;
+      let rushFeeElem = document.getElementById(`client-rush-fee-${itemNum}`);
+      let rushFee = rushFeeElem.value || 0;
+
+      otherFeesForAllItems += Number(cfaFee);
+      otherFeesForAllItems += Number(setupFee);
+      otherFeesForAllItems += Number(rushFee);
+
+      // console.log({itemTotal, itemQuantity, unitPrice, cutFee})
+      //handle pop up windows?
+    }
+
+    //define freight fees
+    const packingFeeElem = document.getElementById("client-price-packing-fee");
+    const packingFee = packingFeeElem.value || 0;
+    const intlFeeElem = document.getElementById(
+      "client-price-international-fee"
+    );
+    const intlFee = intlFeeElem.value || 0;
+    const freightFeeElem = document.getElementById("client-price-freight-fee");
+    const freightFee = freightFeeElem.value || 0;
+    const allFreightFees =
+      Number(packingFee) + Number(intlFee) + Number(freightFee);
+
+    const paymentAmtElem = document.getElementById("payment-amount-1");
+    const paymentAmt = paymentAmtElem.value || 0;
+
+    const salesTaxTotal = 0;
+
+    const orderTotal =
+      subtotalForAllItems +
+      cutFeesForAllItems +
+      otherFeesForAllItems +
+      allFreightFees +
+      salesTaxTotal;
+
+    subtotalElem.value = `$${subtotalForAllItems}`;
+    cutFeesElem.value = `$${cutFeesForAllItems}`;
+    otherFeesElem.value = `$${otherFeesForAllItems}`;
+    freightFeesElem.value = `$${allFreightFees}`;
+    salesTaxElem.value = "?";
+    orderTotalElem.value = `$${orderTotal}`;
+    paymentTotalElem.value = `$${paymentAmt}`;
+    balanceDueElem.value = `$${
+      Number(orderTotal || 0) - Number(paymentAmt || 0)
+    }`;
+  }
+
+  /******************************* SEARCHABLE DROP DOWN SELECTION *********************************************/
+  /**
+   * Handle the selection of an option from the options list and update the input element.
+   * @param {HTMLElement} optionElem - The option element that was selected.
+   */
+  function optionListSelection(optionElem) {
+    console.log("running optionListSelection")
+    console.log(optionElem)
+
+    let selection = optionElem.textContent.trim();
+    // const itemNum = getElementItemNumber(optionElem.parentNode.id);
+    const container = optionElem.closest(".custom-select");
+    const inputElem = container.querySelector("input");
+
+    if (selection == "Clear Selection") selection = "";
+
+    inputElem.value = selection;
+  }
+
+  /**
+   * Perform a pattern search based on user input and filter options.
+   * @param {HTMLInputElement} searchInput - The input element for search.
+   */
+  function patternSearchOnInput(elem) {
+    console.log("running patternSearchOnInput")
+    console.log('clicked', elem)
+
+    // console.log(elem.tagName);
+    const container = elem.closest(".custom-select");
+    const optionsList = container.querySelector("ul");
+    const searchInput = container.querySelector("input");
+    console.log('container', container);
+    console.log('options list', optionsList);
+
+    // const itemNum = getElementItemNumber(searchInput.id);
+    const options = optionsList.getElementsByTagName("li");
+    var searchTerm = searchInput.value.toLowerCase().trim();
+
+    optionsList.style = "display: block; z-index: 1";
+
+    for (let option of options) {
+      let optionText = option.textContent.toLowerCase().trim();
+
+      if (
+        searchTerm === "" ||
+        optionText.includes(searchTerm) ||
+        optionText == "clear selection"
+      ) {
+        option.style.display = "block";
+      } else {
+        option.style.display = "none";
+      }
+    }
+  }
+
+  function freightShipToStateOnInput(elem) {
+    console.log("running freightShipToStateOnInput")
+
+    const container = elem.closest(".custom-select");
+    const optionsList = container.querySelector("ul");
+    const searchInput = container.querySelector("input");
+
+    // const itemNum = getElementItemNumber(searchInput.id);
+    const options = optionsList.getElementsByTagName("li");
+    const searchTerm = searchInput.value.toLowerCase().trim();
+
+    optionsList.style.display = "block";
+
+    for (let option of options) {
+      let optionText = option.textContent.toLowerCase().trim();
+
+      if (
+        searchTerm === "" ||
+        optionText.includes(searchTerm) ||
+        optionText == "clear selection"
+      ) {
+        option.style.display = "block";
+      } else {
+        option.style.display = "none";
+      }
+    }
+  }
+
+  /********************************* MANAGE QUANTITY NOTIFICATION **************************************************/
+  function manageQuantityNotification(itemQuantityElem) {
+    const itemNumber = getElementItemNumber(itemQuantityElem.id);
+    const quantity = itemQuantityElem.value;
+    const qtyNotificationElem = document.getElementById(
+      `quantity-notification-${itemNumber}`
+    );
+    const templeCodeElem = document.getElementById(`temple-code-${itemNumber}`);
+    const templeCode = templeCodeElem.value;
+    const products =
+      destinationsObject.orderpage.products ||
+      destinationsObject["item-lookup-page"].products;
+    const incQty = products[templeCode]["INCREMENT QTY"];
+    const minQty = products[templeCode]["MINIMUM ORDER QTY"];
+    var notificationStr = "";
+
+    //factor in vendor Walter G., he has different rules.
+
+    if (incQty && Number(quantity) % Number(incQty) != 0)
+      notificationStr += `• SOLD IN INCREMENTS OF ${incQty}\n`;
+    if (minQty && Number(quantity) < Number(minQty))
+      notificationStr += `• BELOW VENDOR MINIMUM`;
+
+    qtyNotificationElem.innerText = notificationStr;
+  }
+
+  /********************************* MANAGE CFA NOTIFICATION **************************************************/
+  function cfaNotification(cfaStatusSelectElem) {
+    //will run onchange
+    const itemNumber = getElementItemNumber(cfaStatusSelectElem.id);
+    const cfaStatus = cfaStatusSelectElem.value;
+    const cfaNotificationElem = document.getElementById(
+      `cfa-notification-${itemNumber}`
+    );
+    const { products } = destinationsObject.orderpage;
+    const templeCodeElem = document.getElementById(`temple-code-${itemNumber}`);
+    const templeCode = templeCodeElem.value;
+    const cfaAllowed = products[templeCode]["CFA OFFERED"];
+    const cfaMinimum = products[templeCode]["CFA MINIMUM QTY"];
+    var notificationStr = "";
+
+    if (cfaAllowed.toString().trim().toLowerCase() == "no") {
+      notificationStr += `• CFAs NOT OFFERED FOR THIS SKU`;
+    } else if (cfaAllowed.toString().trim().toLowerCase() == "yes") {
+      notificationStr += `• CFAs AVAILABLE FOR QTY OF ${cfaMinimum || "?"}`;
+    }
+
+    cfaNotificationElem.innerText = notificationStr;
+  }
+
+  /********************************* UPDATE LEAD TIME **************************************************/
+  function updateLeadTime(statusSelectElement) {
+    // update lead time boxes,
+    // ids to update will be lead-time-left- and lead-time-right-
+    // trigger on change of  status select box
+
+    const elemId = statusSelectElement.id;
+    const itemNumber = getElementItemNumber(elemId);
+    const selectionValue = statusSelectElement.value;
+    const leadTimeLeftElem = document.getElementById(
+      `lead-time-left-${itemNumber}`
+    );
+    const leadTimeRightElem = document.getElementById(
+      `lead-time-right-${itemNumber}`
+    );
+
+    if (
+      /in stock/i.test(selectionValue) &&
+      !/not in stock/i.test(selectionValue)
+    ) {
+      leadTimeLeftElem.value = "";
+      leadTimeRightElem.value = "";
+      return;
+    }
+
+    const templeCodeElem = document.getElementById(`temple-code-${itemNumber}`);
+    const templeCode = templeCodeElem.value;
+
+    if (!templeCode) return;
+
+    const productPTO =
+      destinationsObject.orderpage.products[templeCode][
+        "STOCKED/PRINT-TO-ORDER"
+      ];
+    const productLeadTime =
+      destinationsObject.orderpage.products[templeCode][
+        "OUT-OF-STOCK LEAD TIME"
+      ];
+
+    leadTimeLeftElem.value = productPTO;
+    leadTimeRightElem.value = `STANDARD LEAD TIME: ${productLeadTime}`;
+  }
+
+  /********************************* CREATE NEW ITEM **************************************************/
+  //needs fix: when there are values in item 1, the new item gets created with those same values in them. they need to be blank
+  //need addition: a way to remove/delete an item
+  function createNewItem(newItemButtonDiv) {
+    var previousItemNumber = Number(destinationsObject.orderpage.items.number);
+    var nextItemNumber = previousItemNumber + 1;
+    var originalDiv = document.getElementById("item-group-container-1");
+
+    // Create a new container div for the duplicated sections
+    var containerDiv = document.createElement("div");
+
+    containerDiv.id = `item-group-container-${nextItemNumber}`;
+
+    // Iterate over the original divs and duplicate each one
+    // Create a new div element as a copy of the original div
+    var newDiv = originalDiv.cloneNode(true);
+
+    // Change the name and id of elements inside the new div
+    var elements = newDiv.querySelectorAll('[id$="1"], [for$="1"]');
+
+    elements.forEach((element) => {
+      // if(!element.type)
+      // console.log(element)
+      // Update id attribute
+      if (element.hasAttribute("id")) {
+        if (element.id.indexOf("notification") > -1) element.innerText = "";
+        element.setAttribute(
+          "id",
+          element.getAttribute("id").replace(/1$/, nextItemNumber)
+        );
+      }
+
+      if (element.hasAttribute("for"))
+        element.setAttribute(
+          "for",
+          element.getAttribute("for").replace(/1$/, nextItemNumber)
+        );
+
+      if (element.hasAttribute("src")) element.setAttribute("src", "");
+
+      if (element.value) element.value = "";
+
+      if (element.checked) element.checked = false;
+    });
+
+    // Append the duplicated div to the container div
+    containerDiv.appendChild(newDiv);
+
+    // Append the container div after the last div in the class list
+    var lastDiv = document.getElementById(
+      `item-group-container-${previousItemNumber}`
+    );
+    lastDiv.parentNode.insertBefore(containerDiv, lastDiv.nextSibling);
+
+    revealClientPriceOverride(
+      document.getElementById(`manual-override-${nextItemNumber}`)
+    );
+    patternSelectorChange(
+      document.getElementById(`pattern-name-${nextItemNumber}`)
+    );
+
+    //**** update navbar *********************************************************************************
+    //next, duplicate "item-1", insert the duplicate just before the new item div
+    const item1NavDiv = document.getElementById("item-navbar-1");
+    const newItemNavDiv = item1NavDiv.cloneNode(true);
+
+    newItemNavDiv.textContent = `Item ${nextItemNumber}`;
+    newItemNavDiv.setAttribute(
+      "onclick",
+      `navbarSelection(this, 'item-info-${nextItemNumber}')`
+    );
+    newItemNavDiv.id = `item-navbar-${nextItemNumber}`;
+
+    // parentNode.insertBefore(newNode, referenceNode);
+    newItemButtonDiv.parentNode.insertBefore(newItemNavDiv, newItemButtonDiv);
+
+    //scroll to the new item created
+    navbarSelection(newItemNavDiv, `item-info-${nextItemNumber}`);
+
+    destinationsObject.orderpage.items.number = nextItemNumber;
+  }
+
+  /********************************* CREATE NEW TRACKING NUMBER GROUP **************************************************/
+  function createNewTracking() {
+    const previousTrackingGroupNumber = Number(
+      destinationsObject.orderpage.trackingNumberGroups.number
+    );
+    const nextTrackingGroupNumber = previousTrackingGroupNumber + 1;
+    const originalDiv = document.getElementById("tracking-group-container-1");
+    const clonedDiv = originalDiv.cloneNode(true);
+    const elements = clonedDiv.querySelectorAll('[id$="1"], [for$="1"]');
+
+    clonedDiv.id = `tracking-group-container-${nextTrackingGroupNumber}`;
+
+    elements.forEach((element) => {
+      if (element.hasAttribute("id"))
+        element.setAttribute(
+          "id",
+          element.getAttribute("id").replace(/1$/, nextTrackingGroupNumber)
+        );
+
+      if (element.hasAttribute("for"))
+        element.setAttribute(
+          "for",
+          element.getAttribute("for").replace(/1$/, nextTrackingGroupNumber)
+        );
+
+      if (element.hasAttribute("value")) element.value = "";
+    });
+
+    const lastDiv = document.getElementById(
+      `tracking-group-container-${previousTrackingGroupNumber}`
+    );
+    lastDiv.insertAdjacentElement("afterend", clonedDiv);
+
+    destinationsObject.orderpage.trackingNumberGroups.number =
+      nextTrackingGroupNumber;
+  }
+
+  /********************************* NAVIGATION **************************************************/
+  function navigation(destination, optValue) {
+    //need some global variables...
+    const optionalObject = destinationsObject[destination];
+    destinationsObject.globals.destination = destination;
+    console.log({ destination: destinationsObject.globals.destination });
+    
+    getEffectiveUser().then(user => {
+      destinationsObject.globals.user = user;
+
+      google.script.run
+        .withFailureHandler((err) => console.log({ err }))
+        .withSuccessHandler((response) => {
+          document.getElementById("content").innerHTML = response.html;
+          document.getElementById("page-subtitle").innerHTML =
+            response.pageSubtitle;
+
+          // This series of if-else adds/removes buttons from the header
+          // as well as sets up the pages referenced
+          if (destination == "orderpage") {
+            configureOrderPage();
+          } else {
+            deconstructOrderPage();
+          }
+          if (destination == "carpet-sample-page") {
+            configureCarpetSamplePage(destination);
+          } else {
+            deconstructCarpetSamplePage();
+          }
+          if (destination == "rug-product-entry") {
+            configureRugProductEntry(optValue);
+          } else {
+            deconstructRugProductEntry();
+          }
+          if (destination == 'payment-link-generator-submit') {
+            configurePaymentLink(optValue);
+          } else {
+            deconstructPaymentLink();
+          }
+
+          if (destination == "item-lookup-page") {
+            configureItemLookupPage();
+          } else if (destination == "carpet-sample-page-check-in") {
+            configureCarpetSampleCheckInPage(destination, optValue);
+          } else if (destination == "client-interactions") {
+            configureClientInteractionsPage(destination);
+          } else if (destination == "looker-studio-reports") {
+            configureLookerStudioReportsPage(optValue);
+          } else if (destination == 'home-directory') {
+            configureLookerStudioLinks();
+          }
+        }).navigation(destination, optionalObject);
+    }).catch(error => {
+      throw error;
+    });
+  }
+  // function navigation(destination, optValue) {
+  //   //need some global variables...
+  //   const optionalObject = destinationsObject[destination];
+  //   destinationsObject.globals.destination = destination;
+  //   console.log({ destination: destinationsObject.globals.destination });
+  //   getEffectiveUser();
+
+  //   google.script.run
+  //     .withFailureHandler((err) => console.log({ err }))
+  //     .withSuccessHandler((response) => {
+  //       document.getElementById("content").innerHTML = response.html;
+  //       document.getElementById("page-subtitle").innerHTML =
+  //         response.pageSubtitle;
+
+  //       // This series of if-else adds/removes buttons from the header
+  //       // as well as set up the pages referenced
+  //       if (destination == "orderpage") {
+  //         configureOrderPage();
+  //       } else {
+  //         deconstructOrderPage();
+  //       }
+  //       if (destination == "carpet-sample-page") {
+  //         configureCarpetSamplePage(destination);
+  //       } else {
+  //         deconstructCarpetSamplePage();
+  //       }
+  //       if (destination == "rug-product-entry") {
+  //         configureRugProductEntry(optValue);
+  //       } else {
+  //         deconstructRugProductEntry();
+  //       }
+
+  //       if (destination == "item-lookup-page") {
+  //         configureItemLookupPage();
+  //       } else if (destination == "carpet-sample-page-check-in") {
+  //         configureCarpetSampleCheckInPage(destination, optValue);
+  //       } else if (destination == "client-interactions") {
+  //         configureClientInteractionsPage(destination);
+  //       } else if (destination == "looker-studio-reports") {
+  //         configureLookerStudioReportsPage(optValue);
+  //       } else if (destination == 'home-directory') {
+  //         configureLookerStudioLinks();
+  //       }
+  //     })
+  //     .navigation(destination, optionalObject);
+  // }
+
+  /********************************* CLIENT SELECT ONCHANGE **************************************************/
+  function clientNameSelectorChange(selectElement) {
+    const selectedClient = selectElement.value;
+    const clients = destinationsObject.orderpage.clients;
+    const client = clients[selectedClient];
+    const address1Elem = document.getElementById("street-address");
+    const address2Elem = document.getElementById("address-line-city-state-zip");
+    const countryElem = document.getElementById("country");
+    const contactNameElem = document.getElementById("contact-name");
+    const contactEmailElem = document.getElementById("contact-email");
+
+    address1Elem.innerHTML = selectedClient
+      ? `${client["STREET ADDRESS 1"]} ${client["STREET ADDRESS 2"]}`
+      : "";
+    address2Elem.innerHTML = selectedClient
+      ? `${client["CITY"]}, ${client["STATE"]} ${client["ZIP CODE"]}`
+      : "";
+    countryElem.innerHTML = selectedClient ? `${client["COUNTRY"]}` : "";
+    contactNameElem.value = selectedClient ? client["CONTACT NAME"] : "";
+    contactEmailElem.value = selectedClient ? client["EMAIL"] : "";
+
+    //**** SET ITEM PRICE TYPE (NET OR RETAIL) ****
+    //if Designer, then NET, otherwise RETAIL
+    const clientPriceType = client["ACCOUNT TYPE"]
+      ? /designer/i.test(client["ACCOUNT TYPE"].toString())
+        ? "NET"
+        : "RETAIL"
+      : "";
+    destinationsObject.orderpage.clientPriceType = clientPriceType;
+
+    for (let i = 1; i <= 6; i++) {
+      let itemPriceId = `price-type-${i}`;
+      let itemPriceElem = document.getElementById(itemPriceId);
+      if (!itemPriceElem) continue;
+
+      itemPriceElem.innerHTML = `${clientPriceType} Price`;
+    }
+  }
+
+  /********************************* PATTERN SELECT ONCHANGE *****************************************/
+  function patternSelectorChange(elem) {
+    // for both orderpage and item lookup page
+
+    // console.log('before patternSelectorChange', destinationsObject["item-lookup-page"]["fees"], destinationsObject["item-lookup-page"]["vendorFees"])
+
+    // console.log("running patternSelectorChange (this one needs to be reconfigured)")
+    // selectElement = selectElement || document.getElementById("pattern-name-1");
+
+    if (elem.tagName == "INPUT") {
+      //elem.tagName == "SELECT" ||
+      var inputElem = elem;
+    } else if (elem.tagName == "LI") {
+      const container = elem.closest(".custom-select");
+      var inputElem = container.querySelector("input");
+    } else {
+      return;
+    }
+
+    const selectedPattern = inputElem.value;
+    // const selectedPatternKey = inputElem.dataset.id;
+    const products =
+      destinationsObject.orderpage.products ||
+      destinationsObject["item-lookup-page"].products;
+    const elemId = inputElem.id;
+    const itemNumber = getElementItemNumber(elemId);
+    const colorwayElem = document.getElementById(`colorway-${itemNumber}`);
+    const templeIdElem = document.getElementById(`temple-code-${itemNumber}`);
+    const vendorSkuElem = document.getElementById(`vendor-sku-${itemNumber}`);
+    const vendorNameElem = document.getElementById(`vendor-name-${itemNumber}`);
+    const freightShipToSelectElem = document.getElementById(
+      "freight-ship-to-state-select"
+    );
+    const freightShipMethodSelectElem = document.getElementById(
+      "freight-ship-method-select"
+    );
+
+    colorwayElem.innerHTML = "<option value=''></option>";
+    freightShipToSelectElem.innerHTML = "<option value=''></option>";
+    freightShipMethodSelectElem.innerHTML = "<option value=''></option>";
+
+    const event = new Event("change", { bubbles: true });
+    colorwayElem.dispatchEvent(event);
+    freightShipToSelectElem.dispatchEvent(event);
+    freightShipMethodSelectElem.dispatchEvent(event);
+
+    templeIdElem.value = "";
+    vendorSkuElem.value = "";
+    vendorNameElem.value = "";
+
+    if (selectedPattern == "") return;
+
+    // here populate all the options with the colorway options for this pattern
+    for (let p in products) {
+      let product = products[p];
+      if (product["PATTERN/CATEGORY"] == selectedPattern) {
+        let option = document.createElement("option");
+        let colorway = product["COLORWAY"];
+        option.value = colorway;
+        option.innerHTML = colorway;
+        option.id = colorway;
+        option.classList.add("gothica1-light-charade-light");
+
+        colorwayElem.appendChild(option);
+      }
+    }
+  }
+
+  /********************************* COLORWAY SELECT ONCHANGE *****************************************/
+  function colorwaySelectorChange(selectElement) {
+    const selectedColorway = selectElement.value;
+    var { vendors, clients, products, clientPriceType } =
+      destinationsObject.orderpage;
+    const elemId = selectElement.id;
+    const itemNumber = getElementItemNumber(elemId);
+    const patternNameElem = document.getElementById(
+      `pattern-name-${itemNumber}`
+    );
+
+    //this element must no longer be temple code, but vendor sku
+    const templeIdElem = document.getElementById(`temple-code-${itemNumber}`);
+
+    const vendorNameElem = document.getElementById(`vendor-name-${itemNumber}`);
+    const itemImageElem = document.getElementById(`item-image-${itemNumber}`);
+    const itemUnitPerMeasureElem = document.getElementById(
+      `price-unit-cost-${itemNumber}`
+    );
+    const showroomCostElem = document.getElementById(
+      `showroom-cost-${itemNumber}`
+    );
+    const vendorUnitOfMeasureElem = document.getElementById(
+      `vendor-unit-of-measure-${itemNumber}`
+    );
+    const showroomUnitOfMeasureElem = document.getElementById(
+      `showroom-unit-of-measure-${itemNumber}`
+    );
+    const clientPriceElem = document.getElementById(
+      `client-price-${itemNumber}`
+    );
+    const clientUnitPerMeasureElem = document.getElementById(
+      `client-price-measure-per-${itemNumber}`
+    );
+    const clientPriceShowroomElem = document.getElementById(
+      `client-showroom-cost-${itemNumber}`
+    );
+    const clientPriceShowroomMeasurePerElem = document.getElementById(
+      `client-showroom-cost-measure-per-${itemNumber}`
+    );
+    const patternName = patternNameElem.value;
+
+    [
+      templeIdElem,
+      vendorNameElem,
+      itemImageElem,
+      itemUnitPerMeasureElem,
+      showroomCostElem,
+      vendorUnitOfMeasureElem,
+      showroomUnitOfMeasureElem,
+      clientPriceElem,
+      clientUnitPerMeasureElem,
+      clientPriceShowroomElem,
+      clientPriceShowroomMeasurePerElem,
+    ].forEach((e) => (e["value"] = ""));
+
+    if (!patternName || !selectedColorway) return;
+
+    for (let p in products) {
+      let product = products[p];
+
+      if (
+        product["PATTERN/CATEGORY"] == patternName &&
+        product["COLORWAY"] == selectedColorway
+      ) {
+        let vendorName = product["VENDOR"];
+        let vendor = vendors[vendorName];
+
+        //set input values within the "ITEM" table
+        templeIdElem.value = product["TEMPLE DM CODE"];
+        vendorNameElem.value = vendorName || "-";
+        itemImageElem.setAttribute("src", product["IMAGE LINK"]);
+
+        //now set the currency and amount in the "PRICE" table
+        let vendorCurrency = vendor["SHOWROOM CURRENCY"] || "";
+        let productPrice =
+          clientPriceType == "NET"
+            ? product["DESIGNER NET PRICE SHOWROOM CURRENCY"]
+            : product["RETAIL PRICE SHOWROOM CURENCY"];
+        itemUnitPerMeasureElem.value = `${vendorCurrency}${productPrice}`;
+
+        //set the showroom cost in the "PRICE" table
+        let vendorShowroomCurrency = vendor["VENDOR CURRENCY"];
+        let showroomCost = product["SHOWROOM COST VENDOR CURRENCY"];
+        showroomCostElem.value = `${vendorShowroomCurrency}${showroomCost}`;
+
+        //set the vendor unit of measure in the "PRICE" table
+        let vendorUnitOfMeasure = product["QTY VENDOR UNIT OF MEASURE"];
+        vendorUnitOfMeasureElem.value = vendorUnitOfMeasure;
+
+        //set the showroom unit of measure in the "PRICE" table
+        let showroomUnitOfMeasure = product["QTY SHOWROOM UNIT OF MEASURE"];
+        showroomUnitOfMeasureElem.value = showroomUnitOfMeasure;
+
+        //below commented out. When colorway selected, should not populate the end client price, should leave it blank
+        // //set the client price in the "PRICE" table
+        // clientPriceElem.value = `${vendorCurrency}${productPrice}`;
+        // clientUnitPerMeasureElem.value = vendorUnitOfMeasure;
+
+        // //set the client showroom cost in the "PRICE" table
+        // clientPriceShowroomElem.value = `${vendorShowroomCurrency}${showroomCost}`;
+        // clientPriceShowroomMeasurePerElem.value = showroomUnitOfMeasure;
+
+        break;
+      }
+    }
+
+    sumTotals();
+  }
+
+  /********************************* CONFIGURE ORDER PAGE **************************************************/
+  function configureOrderPage() {
+    const clientNameElement = document.getElementById("name");
+    const patternNameElement = document.getElementById("pattern-name-1");
+    const buttonsDiv = document.getElementById("order-buttons-group");
+
+    buttonsDiv.style.display = "flex";
+
+    google.script.run
+      .withSuccessHandler((response) => {
+        //in succession, load up the drop down menus on the page top to bottom
+        const { clients, products, vendors } = JSON.parse(response);
+        Object.assign(destinationsObject.orderpage, {
+          clients,
+          products,
+          vendors,
+        });
+        document.getElementById("placeholder-client-name-option").innerHTML =
+          "";
+
+        for (c in clients) {
+          let client = clients[c];
+          let option = document.createElement("option");
+          option.value = c;
+          option.innerHTML = c;
+          option.id = c;
+          option.classList.add("gothica1-light-charade-light");
+
+          clientNameElement.appendChild(option);
+        }
+
+        //run pattern names next for elem id of "pattern-name-1"
+        const addedPatternNames = [];
+        for (let p in products) {
+          let patternName = products[p]["PATTERN/CATEGORY"];
+
+          if (addedPatternNames.includes(patternName)) continue;
+
+          let option = document.createElement("option");
+          option.value = patternName;
+          option.innerHTML = patternName;
+          option.id = patternName;
+          option.classList.add("gothica1-light-charade-light");
+
+          patternNameElement.appendChild(option);
+          addedPatternNames.push(patternName);
+        }
+      })
+      .loadPage(["clients", "products", "vendors"]);
+  }
+
+  /********************************* DECONSTRUCT ORDER PAGE **************************************************/
+  function deconstructOrderPage() {
+    const buttonsDiv = document.getElementById("order-buttons-group");
+    buttonsDiv.style.display = "none";
+  }
+
+  /********************************* CLEAR FORM **************************************************/
+  function clearForm() {
+    // Clear span elements
+    var spans = document.getElementsByTagName("span");
+    for (var i = 0; i < spans.length; i++) {
+      spans[i].textContent = "";
+    }
+
+    // Clear input elements
+    var inputs = document.getElementsByTagName("input");
+    for (var j = 0; j < inputs.length; j++) {
+      inputs[j].value = "";
+      inputs[j].checked = false;
+    }
+
+    // Clear select elements
+    var selects = document.getElementsByTagName("select");
+    for (var k = 0; k < selects.length; k++) {
+      selects[k].value = "";
+    }
+
+    // Clear textareas
+    var textareas = document.getElementsByTagName("textarea");
+    for (var k = 0; k < textareas.length; k++) {
+      textareas[k].value = "";
+    }
+
+    // Clear images
+    var images = document.getElementsByTagName("img");
+    for (var k = 1; k < images.length; k++) {
+      images[k].src = "";
+    }
+  }
+
+  /********************************* SELECTION OF LEFT ORDERPAGE NAVBAR **************************************************/
+  function navbarSelection(clickedElement, anchorId) {
+    const elems = document.getElementsByClassName("nav-header-selected");
+
+    for (let e = 0; e < elems.length; e++) {
+      elems[e].classList.add("nav-header-unselected");
+      elems[e].classList.remove("nav-header-selected");
+    }
+
+    clickedElement.classList.add("nav-header-selected");
+
+    const scrollElement = document.getElementById(anchorId);
+    if (scrollElement) {
+      // scrollElement.scrollIntoView({behavior: 'smooth' });
+      const offset = document.getElementById("header").offsetHeight;
+      const topPosition =
+        scrollElement.getBoundingClientRect().top +
+        window.pageYOffset -
+        offset -
+        20;
+
+      window.scrollTo({
+        top: topPosition,
+        behavior: "smooth",
+      });
+    }
+  }
+
+  /********************************* MIRROR INPUT CHANGE FUNCTION **************************************************/
+  function mirrorChange(
+      originElement,
+      destinationElementId,
+      originType = "value",
+      destinationType = "value"
+    ) {
+      // console.log({originElement, destinationElementId, originType, destinationType})
+      const itemNumber = getElementItemNumber(originElement.id);
+      const originVal = originElement[originType];
+      const destinationElement = document.getElementById(
+        `${destinationElementId}${itemNumber}`
+      );
+
+      destinationElement[destinationType] = originVal;
+  }
+
+  function getEffectiveUser() {
+    return new Promise((resolve, reject) => {
+      google.script.run
+        .withFailureHandler(error => reject(error))
+        .withSuccessHandler(user => resolve(JSON.parse(user)))
+        .getEffectiveUser();
+    });
+  }
+
+  // function getEffectiveUser() {
+  //   var userOb;
+  //   return google.script.run
+  //     .withSuccessHandler((user) => {
+  //       destinationsObject.globals.user = user;
+  //     })
+  //     .getEffectiveUser();
+  // }
+
+  function revealClientPriceOverride(thisCheckbox) {
+    //client-price-row-3-1
+    const id = thisCheckbox.id;
+    const inputElementIds = [
+      "price-type-",
+      "approved-by-",
+      "date-approved-",
+      // 'price-unit-cost-',
+      // 'showroom-cost-',
+      // 'vendor-unit-of-measure-',
+      // 'showroom-unit-of-measure-'
+    ];
+
+    const itemNumber = getElementItemNumber(id);
+    const checked = thisCheckbox.checked;
+
+    inputElementIds.forEach((elem) => {
+      if (checked) {
+        document
+          .getElementById(`${elem}${itemNumber}`)
+          .removeAttribute("disabled");
+      } else if (!checked) {
+        document
+          .getElementById(`${elem}${itemNumber}`)
+          .setAttribute("disabled", "disabled");
+      }
+    });
+
+    const hiddenElementIds = ["client-price-row-3-", "client-price-row-4-"];
+
+    hiddenElementIds.forEach((elem) => {
+      if (checked) {
+        document.getElementById(`${elem}${itemNumber}`).style.display = "flex";
+      } else if (!checked) {
+        document.getElementById(`${elem}${itemNumber}`).style.display = "none";
+      }
+    });
+
+    sumTotals();
+  }
+
+  function getElementItemNumber(elemId) {
+    return elemId[elemId.length - 1];
+  }
+
+  function extractNumbersFromString(inputString) {
+    const numericChars = inputString.match(/[\d.]+/g);
+    if (numericChars) {
+      const numericString = numericChars.join("");
+      return parseFloat(numericString);
+    }
+    return NaN; // Return NaN if no numbers were found
+  }
+</script>

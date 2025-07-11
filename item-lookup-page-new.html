@@ -1,0 +1,1443 @@
+<div class="container-center-horizontal">
+  <div class="flex-row-1">
+    <div id="left-side-nav" class="left-side-nav"></div>
+
+    <div class="body-section">
+       <!-- left border -->
+       <hr style="left: 15vw;" class="vertical-line-right-side">
+    
+       <!-- right border -->
+       <hr class="vertical-line-right-side">
+     
+       <!-- middle border separating fee details at bottom section -->
+       <hr id="additional-fees-table-middle-border" style="left: 40vw; top: 60vw; height: 34%;"
+         class="vertical-line-right-side">
+     
+     
+       <div class="center-all-container" style="margin-top: 40px">
+     
+         <div id="item-group-container-1">
+     
+           <div class="order-section-div">
+     
+             <div class="middle-order-div-margined">
+     
+               <!------------------------------------------------- ITEM SELECTION ------------------------------------------------------------>
+     
+               <div id="item-info-1" class="form-header valign-text-middle lexenddeca-semi-bold-charade-m">
+                 ITEM
+               </div>
+     
+               <table class="order-table">
+                 <tbody>
+     
+                   <!-- pattern name -->
+                   <tr class="item-group-standard">
+                     <td>
+                       <label
+                           for="pattern-name-1"
+                           class="item-label-standard valign-text-middle gothica1-light-charade-14px">
+                           Pattern Name
+                           </label>
+                     </td>
+     
+                     <td>
+     
+                       <div class="custom-select">
+                         <input
+                         id="pattern-name-1"
+                         placeholder="Loading..."
+                         oninput="patternSearchOnInput(this)"
+                         onclick="patternSearchOnInput(this)"
+                         onchange="patternSelectorChange(this)"
+                         class="search-input middle-form-input gothica1-light-charade-light" />
+                         <ul id="options-list-1" class="options-list">
+                           <li style="color: #e0e0e0;" class="gothica1-light-charade-light"
+                             onclick="optionListSelection(this); patternSelectorChange(this); patternSearchOnInput(this)">
+                             Clear Selection</li>
+                           <!-- ...more options loaded from sheet(s) -->
+                         </ul>
+                       </div>
+                     </td>
+                   </tr>
+     
+                   <!-- colorway -->
+                   <tr class="item-group-standard">
+                     <td>
+                       <label
+                           for="colorway-1"
+                           class="item-label-standard valign-text-middle gothica1-light-charade-14px">
+                           Colorway
+                           </label>
+                     </td>
+                     <td>
+                       <select
+                           onchange="colorwaySelectorChangeItemLookup(this); moveAdditionalFeeBorder()"
+                           value=""
+                           id="colorway-1"
+                           class="middle-form-input gothica1-light-charade-light">
+                       <!-- add scriptlet with pattern name population here -->
+                       <option value=""></option>
+                 </select>
+                     </td>
+                   </tr>
+     
+                   <!-- temple code and vendor name -->
+                   <tr class="item-group-standard">
+     
+                     <!-- temple code label -->
+                     <td>
+                       <!-- <label
+                           for="temple-code-1"
+                           class="item-label-standard valign-text-middle gothica1-light-charade-14px">
+                           Temple Code
+                           </label> -->
+                       <label
+                           for="vendor-sku-1"
+                           class="item-label-standard valign-text-middle gothica1-light-charade-14px">
+                           Vendor SKU
+                           </label>
+                     </td>
+     
+                     <!-- temple code -->
+                     <td style="width: 8vw;">
+                       <input
+                             value=""
+                             disabled
+                             class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light user-no-edit"
+                             id="vendor-sku-1">
+                       </input>
+                       <input
+                       style="display: none"
+                             value=""
+                             disabled
+                             class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light user-no-edit"
+                             id="temple-code-1">
+                       </input>
+                     </td>
+     
+                     <!-- vendor name label -->
+                     <td style="width: 8vw;">
+                       <label
+                             class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                             for="vendor-name-1">
+                           Vendor Name
+                           </label>
+                     </td>
+     
+                     <!-- vendor name input -->
+                     <td>
+                       <input
+                       value=""
+                       style="width: 19vw"
+                       disabled
+                       id="vendor-name-1"
+                       class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light user-no-edit">
+                       </input>
+                     </td>
+                   </tr>
+     
+     
+     
+     
+                 </tbody>
+               </table>
+     
+               <hr class="item-hr " />
+     
+               <!------------------------------------------------- ORDER DETAILS ------------------------------------------------------------>
+               <table class="order-table">
+     
+                 <!-- row 0 -->
+                 <!-- headers -->
+                 <tr class="item-group-standard">
+                   <th class="form-header valign-text-middle lexenddeca-semi-bold-charade-m"
+                     style="width: 14vw; text-align: left;">
+                     ORDER DETAILS
+                   </th>
+                 </tr>
+     
+                 <!-- row 1 -->
+                 <!-- quanitity -->
+                 <tr class="item-group-standard">
+                   <!-- quantity label -->
+                   <td>
+                     <label class="td-multi-item-label valign-text-middle gothica1-light-charade-14px">
+                           Quantity
+                           </label>
+                   </td>
+     
+                   <!-- quantity -->
+                   <td>
+                     <input
+                      onchange="quantityChangeItemLookup(this); calculateFreightCost()"
+                      id="item-quantity-1"
+                      value=""
+                      type="number"
+                      min="0"
+                      style="width: 5vw; text-align: center;"
+                      class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light" />
+                   </td>
+     
+                   <!-- unit of measure -->
+                   <td>
+                     <span class="valign-text-middle gothica1-light-charade-14px" id="vendor-unit-of-measure-1"></span>
+                   </td>
+     
+                   <!-- qty notification -->
+                   <td>
+                     <span
+                       class="valign-text-middle notification-text-14px"
+                       id="quantity-notification-1"
+                       style="width: 20vw; color: red; font-weight: bold; line-height: 1vw;">
+                     </span>
+                   </td>
+                 </tr>
+     
+                 <!-- row 2 -->
+                 <!-- state selection -->
+                 <tr class="item-group-standard">
+                   <td class="td-multi-item-label">
+                     <span class="valign-text-middle gothica1-light-charade-14px">
+                     Ship To State
+                     </span>
+                   </td>
+     
+                   <td class="td-multi-item-label">
+                     <select
+                     id="freight-ship-to-state-select"
+                     onchange="calculateFreightCost()"
+                     style="width: 5vw; text-align: center; align-self: center;"
+                     class="middle-form-input gothica1-light-charade-14px"
+                     >
+                       <option default value=""></option>
+     
+                   </select>
+                   </td>
+     
+                   <!-- freight-ship-to-notification -->
+                   <td>
+                     <span
+                       class="valign-text-middle notification-text-14px"
+                       id="freight-ship-to-notification"
+                       style="width: 20vw; color: red; font-weight: bold; line-height: 1vw;">
+                     </span>
+                   </td>
+                 </tr>
+     
+                 <!-- row 3 -->
+                 <!-- shipping method selection -->
+                 <tr class="item-group-standard">
+                   <td class="td-multi-item-label">
+                     <span class="valign-text-middle gothica1-light-charade-14px">
+                     Shipping Method
+                     </span>
+                   </td>
+     
+                   <td class="td-multi-item-label">
+     
+                     <select
+                     id="freight-ship-method-select"
+                     onchange="calculateFreightCost()"
+                     style="width: 5vw; text-align: center; align-self: center;"
+                     class="middle-form-input gothica1-light-charade-14px"
+                     >
+                       <option default value=""></option>
+                   </select>
+                   </td>
+     
+                   <!--freight-ship-method-notification  -->
+                   <td>
+                     <span
+                       class="valign-text-middle notification-text-14px"
+                       id="freight-ship-method-notification"
+                       style="width: 20vw; color: red; font-weight: bold; line-height: 1vw;">
+                     </span>
+                   </td>
+                 </tr>
+     
+               </table>
+     
+     
+               <hr class="item-hr " />
+     
+               <!------------------------------------------------- FREIGHT FEE CALCULATOR ------------------------------------------------------------>
+               <table class="order-table">
+     
+                 <!-- row 0 -->
+                 <!-- headers -->
+                 <tr class="item-group-standard">
+     
+                   <th class="form-header valign-text-middle lexenddeca-semi-bold-charade-m"
+                     style="width: 14vw; text-align: left;">
+                     FREIGHT PRICE FOR QUOTING
+                   </th>
+     
+                   <th class="form-header valign-text-middle lexenddeca-semi-bold-charade-m"
+                     style="margin-left: 9vw; width: 14vw; text-align: left;">
+                     FREIGHT COST FOR PO'S
+                   </th>
+                 </tr>
+     
+                 <!-- row 1 -->
+                 <!-- freight  -->
+                 <tr class="item-group-standard" style="height: 2vw;">
+     
+                   <!-- freight label -->
+                   <!-- showroom -->
+                   <td style="display: flex; flex-direction: row; justify-content: flex-end; gap: .5vw;"
+                     class="td-multi-item-label">
+     
+                     <label
+                       class="valign-text-middle gothica1-light-charade-14px"
+                       for="freight-price-showroom"
+                       style="align-self: flex-end;"
+                       >
+                         Freight
+                     </label>
+                   </td>
+     
+                   <!-- freight price output -->
+                   <!-- showroom -->
+                   <td>
+                     <span
+                     id="freight-price-showroom"
+                     style="width: 10vw;"
+                     class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"
+                     >
+                     </span>
+                   </td>
+     
+                   <!-- freight label -->
+                   <!-- vendor -->
+                   <td style="display: flex; flex-direction: row; justify-content: flex-end; gap: .5vw;"
+                     class="td-multi-item-label">
+     
+                     <label
+                       class="valign-text-middle gothica1-light-charade-14px"
+                       for="freight-price-showroom"
+                       style="align-self: flex-end;"
+                       >
+                         Freight
+                     </label>
+                   </td>
+     
+                   <!-- freight price output -->
+                   <!-- vendor -->
+                   <td>
+                     <span
+                     id="freight-cost-vendor"
+                     style="width: 10vw;"
+                     class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"
+                     >
+                     </span>
+                   </td>
+     
+                 </tr>
+     
+                 <!-- row 2 -->
+                 <!-- packing fee  -->
+                 <tr class="item-group-standard" style="height: 2vw;">
+     
+                   <!-- freight packing fee label -->
+                   <!-- showroom -->
+                   <td style="display: flex; flex-direction: row; justify-content: flex-end; gap: .5vw;"
+                     class="td-multi-item-label">
+     
+                     <label
+                       class="valign-text-middle gothica1-light-charade-14px"
+                       for="freight-packing-fee-showroom"
+                       style="align-self: flex-end;"
+                       >
+                         Packing Fee
+                     </label>
+                   </td>
+     
+                   <!-- freight packing fee output -->
+                   <!-- showroom -->
+                   <td>
+                     <span
+                     id="freight-packing-fee-showroom"
+                     style="width: 10vw;"
+                     class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"
+                     >
+                     </span>
+                   </td>
+     
+                   <!-- freight packing fee label -->
+                   <!-- vendor -->
+                   <td style="display: flex; flex-direction: row; justify-content: flex-end; gap: .5vw;"
+                     class="td-multi-item-label">
+     
+                     <label
+                       class="valign-text-middle gothica1-light-charade-14px"
+                       for="freight-packing-fee-vendor"
+                       style="align-self: flex-end;"
+                       >
+                         Packing Fee
+                     </label>
+                   </td>
+     
+                   <!-- freight packing fee output -->
+                   <!-- vendor -->
+                   <td>
+                     <span
+                     id="freight-packing-fee-vendor"
+                     style="width: 10vw;"
+                     class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"
+                     >
+                     </span>
+                   </td>
+     
+                 </tr>
+     
+                 <!-- row 3 -->
+                 <!-- approx duties  -->
+                 <tr class="item-group-standard" style="height: 2vw;">
+     
+                   <!-- freight approx duties label -->
+                   <!-- showroom -->
+                   <td style="display: flex; flex-direction: row; justify-content: flex-end; gap: .5vw;"
+                     class="td-multi-item-label">
+     
+                     <label
+                       class="valign-text-middle gothica1-light-charade-14px"
+                       for="freight-approximate-duties-showroom"
+                       style="align-self: flex-end;"
+                       >
+                         Approximate Duties
+                     </label>
+                   </td>
+     
+                   <!-- freight approx duties output -->
+                   <!-- showroom -->
+                   <td>
+                     <span
+                     id="freight-approximate-duties-showroom"
+                     style="width: 10vw;"
+                     class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"
+                     >
+                     </span>
+                   </td>
+     
+                   <!-- freight approx duties label -->
+                   <!-- vendor -->
+                   <td style="display: flex; flex-direction: row; justify-content: flex-end; gap: .5vw;"
+                     class="td-multi-item-label">
+     
+                     <label
+                       class="valign-text-middle gothica1-light-charade-14px"
+                       for="freight-approximate-duties-vendor"
+                       style="align-self: flex-end;"
+                       >
+                         Approximate Duties
+                     </label>
+                   </td>
+     
+                   <!-- freight approx duties output -->
+                   <!-- vendor -->
+                   <td>
+                     <span
+                     id="freight-approximate-duties-vendor"
+                     style="width: 10vw;"
+                     class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"
+                     >
+                     </span>
+                   </td>
+     
+                 </tr>
+     
+                 <!-- row 4 -->
+                 <!-- freight totals  -->
+                 <tr class="item-group-standard" style="height: 2vw;">
+     
+                   <!-- freight total label -->
+                   <!-- showroom -->
+                   <td style="display: flex; flex-direction: row; justify-content: flex-end; gap: .5vw;"
+                     class="td-multi-item-label">
+     
+                     <label
+                       class="valign-text-middle gothica1-light-charade-14px"
+                       for="freight-approximate-duties-showroom"
+                       style="align-self: flex-end; font-weight: bold;"
+                       >
+                         Total
+                     </label>
+                   </td>
+     
+                   <!-- freight total output -->
+                   <!-- showroom -->
+                   <td>
+                     <span
+                     id="freight-total-showroom"
+                     style="width: 10vw; font-weight: bold;"
+                     class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"
+                     >
+                     </span>
+                   </td>
+     
+                   <!-- freight total label -->
+                   <!-- vendor -->
+                   <td style="display: flex; flex-direction: row; justify-content: flex-end; gap: .5vw;"
+                     class="td-multi-item-label">
+     
+                     <label
+                       class="valign-text-middle gothica1-light-charade-14px"
+                       for="freight-approximate-duties-vendor"
+                       style="align-self: flex-end; font-weight: bold;"
+                       >
+                         Total
+                     </label>
+                   </td>
+     
+                   <!-- freight total output -->
+                   <!-- vendor -->
+                   <td>
+                     <span
+                     id="freight-total-vendor"
+                     style="width: 10vw; font-weight: bold;"
+                     class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"
+                     >
+                     </span>
+                   </td>
+     
+                 </tr>
+     
+               </table>
+     
+     
+               <hr class="item-hr " />
+     
+               <!------------------------------------------------- ITEM COST ------------------------------------------------------------>
+     
+               <div id="item-info-1" class="form-header valign-text-middle lexenddeca-semi-bold-charade-m">
+                 COST
+               </div>
+     
+               <table class="order-table">
+     
+                 <!-- row 1 -->
+                 <!-- unit cost -->
+                 <tr class="item-group-standard">
+     
+                   <!-- unit cost label -->
+                   <td>
+                     <label
+                       class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                       for="price-unit-cost-1">
+                         Unit Cost
+                       </label>
+                   </td>
+     
+                   <!-- unit cost input -->
+                   <td>
+                     <span
+                     id="price-unit-cost-1"
+                     style="width: 3vw"
+                     class="td-multi-item-form-input valign-text-middle gothica1-light-charade-14px user-no-edit"
+                     >
+                     </span>
+                   </td>
+     
+                   <!-- x -->
+                   <td class="math-symbols gothica1-light-charade-14px">
+                     x
+                   </td>
+     
+                   <!-- quantity-converted -->
+                   <td>
+                     <span
+                    class="td-multi-item-form-input valign-text-middle gothica1-light-charade-14px user-no-edit"
+                    style="width: 3vw"
+                    id="quantity-converted-1"></span>
+                   </td>
+     
+                   <!-- unit of measure duplicate -->
+                   <td>
+                     <span
+                     class="td-multi-item-form-input valign-text-middle gothica1-light-charade-14px user-no-edit"
+                     style="width: 5vw"
+                     id="unit-of-measure-duplicate-1"></span>
+                   </td>
+     
+                   <!-- = -->
+                   <td style="margin-left: 2vw;" class="gothica1-light-charade-14px math-symbols">
+                     =
+                   </td>
+     
+                   <!-- extended cost label -->
+                   <td>
+                     <label
+                       class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                       for="extended-cost">
+                         Extended Cost
+                       </label>
+                   </td>
+     
+                   <!-- span 5 -->
+                   <td>
+                     <span
+                     class="td-multi-item-form-input valign-text-middle gothica1-light-charade-14px user-no-edit"
+                     style="width: 5vw"
+                     id="extended-cost"></span>
+                   </td>
+     
+     
+     
+     
+                 </tr>
+     
+               </table>
+     
+     
+               <!------------------------------------------------- ITEM PRICE ------------------------------------------------------------>
+     
+               <div id="item-price-info-1" style="margin-top: 3vw; display: flex; flex-direction: row; gap: 1vw"
+                 class="form-header-for-price-only-for-net-retail-dropdown-alignment valign-text-middle lexenddeca-semi-bold-charade-m">
+     
+                 <span class="form-header-for-price-only-for-net-retail-dropdown-alignment valign-text-middle lexenddeca-semi-bold-charade-m">
+                     PRICE
+                     </span>
+     
+                 <select
+                 onchange="netRetailToggle(this)"
+                 style="text-align: center; align-self: center;"
+                 class="middle-form-input lexenddeca-semi-bold-charade-m"
+                 >
+                   <option value="NET">NET</option>
+                   <option value="RETAIL">RETAIL</option>
+                   </select>
+               </div>
+     
+               <table class="order-table">
+     
+                 <!-- row 1 -->
+                 <!-- unit price -->
+                 <tr class="item-group-standard">
+     
+                   <!-- unit price label -->
+                   <td>
+                     <label
+                       class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                       for="price-unit-price-1">
+                         Unit Price
+                       </label>
+                   </td>
+     
+                   <!-- unit price input -->
+                   <td>
+                     <span
+                     id="price-unit-price-1"
+                     style="width: 3vw"
+                     class="td-multi-item-form-input valign-text-middle gothica1-light-charade-14px user-no-edit"
+                     >
+                     </span>
+                   </td>
+     
+                   <!-- x -->
+                   <td class="gothica1-light-charade-14px math-symbols">
+                     x
+                   </td>
+     
+                   <!-- quantity-duplicate -->
+                   <td>
+                     <span
+                    class="td-multi-item-form-input valign-text-middle gothica1-light-charade-14px user-no-edit"
+                    style="width: 3vw"
+                    id="quantity-unconverted-1"></span>
+                   </td>
+     
+                   <!-- unit of measure price for duplicate -->
+                   <td>
+                     <span
+                     class="td-multi-item-form-input valign-text-middle gothica1-light-charade-14px user-no-edit"
+                     style="width: 5vw"
+                     id="unit-of-measure-duplicate-price-1"></span>
+                   </td>
+     
+                   <!-- = -->
+                   <td class="gothica1-light-charade-14px math-symbols" style="margin-left: 2vw;">
+                     =
+                   </td>
+     
+                   <!-- extended price label -->
+                   <td>
+                     <label
+                       class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                       for="extended-price">
+                         Extended Price
+                       </label>
+                   </td>
+     
+                   <!-- extended price span -->
+                   <td>
+                     <span
+                     class="td-multi-item-form-input valign-text-middle gothica1-light-charade-14px user-no-edit"
+                     style="width: 5vw"
+                     id="extended-price"></span>
+                   </td>
+     
+                 </tr>
+     
+               </table>
+     
+     
+               <hr class="item-hr " />
+     
+     
+               <!------------------------------------------------- PRODUCT DETAILS ------------------------------------------------------------>
+               <div style="width: fit-content" id="item-info-1"
+                 class="form-header valign-text-middle lexenddeca-semi-bold-charade-m">
+                 PRODUCT DETAILS
+               </div>
+     
+               <table class="order-table">
+     
+                 <!------------ ROW 0 ------------>
+     
+                 <!-- status -->
+                 <tr class="item-group-standard">
+     
+                   <!-- status label -->
+                   <td>
+                     <label
+                       class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                       for="item-status">
+                         Status
+                     </label>
+                   </td>
+     
+                   <!-- status output -->
+                   <td>
+                     <span
+                     id="item-status"
+                     style="width: 10vw; font-weight: bold;"
+                     class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"
+                     >
+                     </span>
+                   </td>
+                 </tr>
+     
+                 <!------------ ROW 1 ------------>
+     
+                 <tr class="item-group-standard">
+                   <!-- content label -->
+                   <td>
+                     <label
+                       class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                       for="item-content">
+                         Content
+                     </label>
+                   </td>
+                   <!-- content output -->
+                   <td>
+                     <span
+                     id="item-content"
+                     style="width: 10vw"
+                     class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"
+                     >
+                     </span>
+                   </td>
+     
+                   <!-- cut fee label -->
+                   <td>
+                     <label style="width: 10vw;" for="cut-fee" class="td-multi-item-label valign-text-middle gothica1-light-charade-14px">Cut Fee</label>
+                   </td>
+                   <!-- cut fee output -->
+                   <td>
+                     <span id="cut-fee" style="width: 10vw" class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"></span>
+                   </td>
+                 </tr>
+     
+                 <!------------ ROW 2 ------------>
+     
+                 <tr class="item-group-standard">
+                   <!-- repeat label -->
+                   <td>
+                     <label class="td-multi-item-label valign-text-middle gothica1-light-charade-14px" for="repeat">Repeat</label>
+                   </td>
+                   <!-- repeat output -->
+                   <td>
+                     <span id="repeat" style="width: 10vw" class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"></span>
+                   </td>
+     
+                   <!-- setup fee label -->
+                   <td>
+                     <label
+                     style="width: 10vw;"
+                     for="setup-fee"
+                     class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                     >
+                     Setup Fee
+                     </label>
+                   </td>
+                   <!-- setup fee output -->
+                   <td>
+                     <span
+                     id="setup-fee"
+                     style="width: 10vw"
+                     class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"
+                     >
+                     </span>
+                   </td>
+                 </tr>
+     
+                 <!------------ ROW 3 ------------>
+     
+                 <tr class="item-group-standard">
+                   <!-- width label -->
+                   <td>
+                     <label class="td-multi-item-label valign-text-middle gothica1-light-charade-14px" for="width">Width</label>
+                   </td>
+                   <!-- width output -->
+                   <td>
+                     <span id="width" style="width: 10vw" class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"></span>
+                   </td>
+                   <!-- absolute min. label -->
+                   <td>
+                     <label style="width: 10vw;" for="absolute-min" class="td-multi-item-label valign-text-middle gothica1-light-charade-14px">Absolute Min.</label>
+                   </td>
+                   <!-- absolute min. output -->
+                   <td>
+                     <span id="absolute-min" style="width: 10vw" class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"></span>
+                   </td>
+                 </tr>
+     
+                 <!------------ ROW 4 ------------>
+     
+                 <tr class="item-group-standard">
+                   <!-- stocked/printed-to-order label -->
+                   <td>
+                     <label class="td-multi-item-label valign-text-middle gothica1-light-charade-14px" for="stocked-printed">Stocked/Printed-to-Order</label>
+                   </td>
+                   <!-- stocked/printed-to-order output -->
+                   <td>
+                     <span id="stocked-printed" style="width: 10vw" class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"></span>
+                   </td>
+                   <!-- max piece size label -->
+                   <td>
+                     <label style="width: 10vw;" for="max-piece-size" class="td-multi-item-label valign-text-middle gothica1-light-charade-14px">Max Piece Size</label>
+                   </td>
+                   <!-- max piece size output -->
+                   <td>
+                     <span id="max-piece-size" style="width: 10vw" class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"></span>
+                   </td>
+                 </tr>
+     
+                 <!------------ ROW 5 ------------>
+     
+                 <tr class="item-group-standard">
+                   <!-- out-of-stock lead time label -->
+                   <td>
+                     <label class="td-multi-item-label valign-text-middle gothica1-light-charade-14px" for="out-of-stock">Out-of-Stock Lead Time</label>
+                   </td>
+                   <!-- out-of-stock lead time output -->
+                   <td>
+                     <span id="out-of-stock" style="width: 10vw" class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"></span>
+                   </td>
+                   <!-- cfa label -->
+                   <!-- <td>
+                     <label style="width: 10vw;" for="cfa" class="td-multi-item-label valign-text-middle gothica1-light-charade-14px">CFA</label>
+                   </td> -->
+                   <!-- cfa output -->
+                   <!-- <td>
+                     <span id="cfa" style="width: 10vw" class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"></span>
+                   </td> -->
+                 </tr>
+     
+                 <!------------ ROW 6 (duplicate for cfa) ------------>
+     
+                 <tr style="align-items: baseline; height: fit-content;" class="item-group-standard">
+     
+                   <!-- rush fee label -->
+                   <td>
+                     <label
+                     for="cfa"
+                     class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                     >
+                     CFA
+                     </label>
+                   </td>
+     
+                   <!-- rush fee span -->
+                   <td>
+                     <span id="cfa" class="gothica1-light-charade-light"></span>
+                   </td>
+                 </tr>
+     
+                 <!------------ ROW 6 ------------>
+     
+                 <tr style="align-items: baseline; height: fit-content;" class="item-group-standard">
+     
+                   <!-- rush fee label -->
+                   <td>
+                     <label
+                     for="rush-fee"
+                     class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                     >
+                     Rush Fee
+                     </label>
+                   </td>
+     
+                   <!-- rush fee span -->
+                   <td>
+                     <span id="rush-fee" class="gothica1-light-charade-light"></span>
+                   </td>
+                 </tr>
+     
+                 <!------------ ROW 7 ------------>
+     
+                 <tr style="align-items: baseline; height: fit-content;" class="item-group-standard">
+     
+                   <!-- notes to consider label -->
+                   <td>
+                     <label
+                     for="notes-to-consider"
+                     class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                     >
+                     Notes to Consider
+                     </label>
+                   </td>
+     
+                   <!-- notes to consider span -->
+                   <td>
+                     <span id="notes-to-consider" class="gothica1-light-charade-light"></span>
+                   </td>
+                 </tr>
+     
+               </table>
+     
+     
+               <hr id="hr-anchor-for-additional-fee-border" class="item-hr" />
+     
+     
+               <!------------------------------------------------- ADDITIONAL FEES FOR QUOTING AND PO'S ------------------------------------------------------------>
+               <table class="order-table">
+     
+                 <!-- row 0 -->
+                 <!-- headers -->
+                 <tr class="item-group-standard">
+     
+                   <th class="form-header valign-text-middle lexenddeca-semi-bold-charade-m"
+                     style="width: 14vw; text-align: left; color: green">
+                     ADDT'L FEES FOR QUOTING
+                   </th>
+     
+                   <th class="form-header valign-text-middle lexenddeca-semi-bold-charade-m"
+                     style="margin-left: 9vw; width: 14vw; text-align: left; color: red">
+                     ADDT'L FEES FOR PO'S
+                   </th>
+                 </tr>
+     
+                 <!-- row 1 -->
+                 <!-- cut fees factored -->
+                 <tr class="item-group-standard" style="align-items: baseline; height: 2vw;">
+     
+                   <!-- cut fee checkbox and label -->
+                   <!-- showroom -->
+                   <td style="display: flex; flex-direction: row; justify-content: flex-end; gap: .5vw;"
+                     class="td-multi-item-label">
+     
+                     <input
+                     disabled
+                     id="cut-fee-factored-checkbox"
+                     checked=true
+                     type="checkbox"
+                     class="valign-text-middle"
+                     style="display: none; border-color: #808080;"
+                     ></input>
+     
+                     <label
+                       class="valign-text-middle gothica1-light-charade-14px"
+                       for="cut-fee-factored"
+                       style="align-self: flex-end;"
+                       >
+                         Cut Fee
+                     </label>
+                   </td>
+     
+                   <!-- cut fee output -->
+                   <!-- showroom -->
+                   <td>
+                     <span
+                     id="cut-fee-factored"
+                     style="width: 10vw; height: 2vw;"
+                     class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"
+                     >
+                     </span>
+                   </td>
+     
+                   <!-- cut fee checkbox and label -->
+                   <!-- vendor -->
+                   <td style="width: 10vw; display: flex; flex-direction: row; justify-content: flex-end; gap: .5vw;"
+                     class="td-multi-item-label">
+     
+                     <input
+                     disabled
+                     id="cut-fee-factored-vendor-checkbox"
+                     checked=true
+                     type="checkbox"
+                     class="valign-text-middle"
+                     style="display: none; border-color: #808080;"
+                     ></input>
+     
+                     <label
+                       class="valign-text-middle gothica1-light-charade-14px"
+                       for="cut-fee-factored-vendor"
+                       style="align-self: flex-end;"
+                       >
+                         Cut Fee
+                     </label>
+                   </td>
+     
+                   <!-- cut fee output -->
+                   <!-- vendor -->
+                   <td>
+                     <span
+                     id="cut-fee-factored-vendor"
+                     style="width: 10vw; height: 2vw;"
+                     class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"
+                     >
+                     </span>
+                   </td>
+     
+                 </tr>
+     
+                 <!-- row 2 -->
+                 <!-- cfa fees factored  -->
+                 <tr class="item-group-standard">
+     
+                   <!-- cfa fee label -->
+                   <!-- showroom -->
+                   <td style="display: flex; flex-direction: row; justify-content: flex-end; gap: .5vw;"
+                     class="td-multi-item-label">
+                     <input
+                         onchange="cfaCheckboxOnChange(this)"
+                         id="cfa-fee-checkbox"
+                         class="cfa-fee-factored-checkbox-group valign-text-middle"
+                         style="display: none; border-color: #808080;"
+                         type="checkbox"
+                         ></input>
+     
+                     <label
+                       class="valign-text-middle gothica1-light-charade-14px"
+                       id="cfa-fee-factored-label"
+                       for="cfa-fee-factored"
+                       style="color: #808080"
+                       >
+                       CFA Fee
+                     </label>
+                   </td>
+     
+                   <!-- cfa fee output -->
+                   <!-- showroom -->
+                   <td>
+                     <span
+                     id="cfa-fee-factored"
+                     style="width: 10vw"
+                     class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"
+                     >
+                     </span>
+                   </td>
+     
+                   <!-- cfa fee label -->
+                   <!-- vendor -->
+                   <td style="width: 10vw; display: flex; flex-direction: row; justify-content: flex-end; gap: .5vw;"
+                     class="td-multi-item-label">
+                     <input
+                         onchange="cfaCheckboxOnChange(this)"
+                         id="cfa-fee-vendor-checkbox"
+                         class="cfa-fee-factored-checkbox-group valign-text-middle"
+                         style="display: none; border-color: #808080;"
+                         type="checkbox"
+                         ></input>
+     
+                     <label
+                       class="valign-text-middle gothica1-light-charade-14px"
+                       id="cfa-fee-factored-vendor-label"
+                       for="cfa-fee-factored-vendor"
+                       style="color: #808080"
+                       >
+                       CFA Fee
+                     </label>
+                   </td>
+     
+                   <!-- cfa fee output -->
+                   <!-- vendor -->
+                   <td>
+                     <span
+                     id="cfa-fee-factored-vendor"
+                     style="width: 10vw"
+                     class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"
+                     >
+                     </span>
+                   </td>
+                 </tr>
+     
+                 <!-- row 3 -->
+                 <!-- setup fees factored  -->
+                 <tr class="item-group-standard" style="align-items: baseline; height: 2vw;">
+     
+                   <!-- setup fee label -->
+                   <!-- showroom -->
+                   <td style="display: flex; flex-direction: row; justify-content: flex-end; gap: .5vw;"
+                     class="td-multi-item-label">
+     
+                     <input
+                     disabled
+                     id="setup-fee-factored-checkbox"
+                     checked=true
+                     type="checkbox"
+                     class="valign-text-middle"
+                     style="display: none; border-color: #808080;"
+                     ></input>
+     
+                     <label
+                       class="valign-text-middle gothica1-light-charade-14px"
+                       for="setup-fee-factored">
+                         Setup Fee
+                     </label>
+                   </td>
+     
+                   <!-- setup fee output -->
+                   <!-- showroom -->
+                   <td>
+                     <span
+                     id="setup-fee-factored"
+                     style="width: 10vw"
+                     class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"
+                     >
+                     </span>
+                   </td>
+     
+                   <!-- setup fee label -->
+                   <!-- vendor -->
+                   <td style="width: 10vw; display: flex; flex-direction: row; justify-content: flex-end; gap: .5vw;"
+                     class="td-multi-item-label">
+     
+                     <input
+                     disabled
+                     id="setup-fee-factored-vendor-checkbox"
+                     checked=true
+                     type="checkbox"
+                     class="valign-text-middle"
+                     style="display: none; border-color: #808080;"
+                     ></input>
+     
+                     <label
+                       class="valign-text-middle gothica1-light-charade-14px"
+                       for="setup-fee-factored-vendor">
+                         Setup Fee
+                     </label>
+                   </td>
+     
+                   <!-- setup fee output -->
+                   <!-- vendor -->
+                   <td>
+                     <span
+                     id="setup-fee-factored-vendor"
+                     style="width: 10vw"
+                     class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"
+                     >
+                     </span>
+                   </td>
+                 </tr>
+     
+                 <!-- row 4 -->
+                 <!-- rush fees factored  -->
+                 <tr class="item-group-standard">
+     
+                   <!-- rush fee label -->
+                   <!-- showroom -->
+                   <td style="display: flex; flex-direction: row; justify-content: flex-end; gap: .5vw;"
+                     class="td-multi-item-label">
+                     <input
+                         onchange="rushCheckboxOnChange(this)"
+                         id="rush-fee-checkbox"
+                         class="rush-fee-factored-checkbox-group valign-text-middle"
+                         type="checkbox"
+                         ></input>
+     
+                     <label
+                       class=" valign-text-middle gothica1-light-charade-14px"
+                       id="rush-fee-factored-label"
+                       for="rush-fee-factored"
+                       >
+                       Rush Fee
+                     </label>
+                   </td>
+     
+                   <!-- rush fee output -->
+                   <!-- showroom -->
+                   <td>
+                     <span
+                     id="rush-fee-factored"
+                     style="width: 10vw"
+                     class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"
+                     >
+                     </span>
+                   </td>
+     
+                   <!-- rush fee label -->
+                   <!-- vendor -->
+                   <td style="width: 10vw; display: flex; flex-direction: row; justify-content: flex-end; gap: .5vw;"
+                     class="td-multi-item-label">
+                     <input
+                         onchange="rushCheckboxOnChange(this)"
+                         id="rush-fee-vendor-checkbox"
+                         class="rush-fee-factored-checkbox-group valign-text-middle"
+                         type="checkbox"
+                         ></input>
+     
+                     <label
+                       class=" valign-text-middle gothica1-light-charade-14px"
+                       id="rush-fee-factored-vendor-label"
+                       for="rush-fee-factored-vendor"
+                       >
+                       Rush Fee
+                     </label>
+                   </td>
+     
+                   <!-- rush fee output -->
+                   <!-- vendor -->
+                   <td>
+                     <span
+                     id="rush-fee-factored-vendor"
+                     style="width: 10vw"
+                     class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"
+                     >
+                     </span>
+                   </td>
+                 </tr>
+     
+                 <!-- row 5 -->
+                 <!-- specified cuts fee -->
+                 <tr class="item-group-standard" style="height: 3vw;">
+     
+                   <!-- specified cuts fee label -->
+                   <!-- showroom -->
+                   <td style="display: flex; flex-direction: row; justify-content: flex-end; gap: .5vw;"
+                     class="td-multi-item-label">
+     
+                     <!-- CHECKBOX -->
+                     <input
+                         onchange="cutsFeeCheckboxOnChange(this)"
+                         id="cuts-fee-checkbox"
+                         class="rush-fee-factored-checkbox-group valign-text-middle"
+                         type="checkbox"
+                         />
+     
+                     <label
+                       class=" valign-text-middle gothica1-light-charade-14px"
+                       id="cuts-fee-label"
+                       for="cuts-fee-factored"
+                       >
+                       Specified Cuts Fee
+                     </label>
+                   </td>
+     
+                   <!-- cuts fee output -->
+                   <!-- showroom -->
+                   <td style="display: flex; flex-direction: column; width: 10vw;">
+     
+                     <div style="display: flex; gap: 1.5vw;">
+                       <!-- QUANTITY -->
+                       <input
+                     type="number"
+                     onchange="cutsFeeQtyOnChange(this)"
+                     id="cuts-fee-quantity-showroom"
+                     class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light"
+                     style="width: 2vw; display: none;"
+                     min="1"
+                     step="1"
+                     value="1"
+                     />
+     
+                       <!-- TEXT -->
+                       <span
+                     id="cuts-fee-factored"
+                     style="width: 7vw"
+                     class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"
+                     >
+                     </span>
+                     </div>
+     
+                     <div id="cuts-fee-subtext-showroom">
+     
+                     </div>
+     
+                   </td>
+     
+                   <!-- specified cuts fee label -->
+                   <!-- vendor -->
+                   <td style="width: 10vw; display: flex; flex-direction: row; justify-content: flex-end; gap: .5vw;"
+                     class="td-multi-item-label">
+     
+                     <!-- CHECKBOX -->
+                     <input
+                         onchange="cutsFeeCheckboxOnChange(this)"
+                         id="cuts-fee-checkbox-vendor"
+                         class="rush-fee-factored-checkbox-group valign-text-middle"
+                         type="checkbox"
+                         />
+     
+                     <label
+                       class=" valign-text-middle gothica1-light-charade-14px"
+                       id="cuts-fee-label-vendor"
+                       for="cuts-fee-factored-vendor"
+                       >
+                       Specified Cuts Fee
+                     </label>
+                   </td>
+     
+                   <!-- cuts fee output -->
+                   <!-- vendor -->
+                   <td style="display: flex; flex-direction: column; width: 10vw;">
+     
+                     <div style="display: flex; gap: 1.5vw;">
+     
+                       <!-- QUANTITY -->
+                       <input
+                       type="number"
+                       onchange="cutsFeeQtyOnChange(this)"
+                       id="cuts-fee-quantity-vendor"
+                       class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light"
+                       style="width: 2vw; display: none;"
+                       min="1"
+                       step="1"
+                       value="1"
+                       />
+     
+                       <!-- TEXT -->
+                       <span
+                     id="cuts-fee-factored-vendor"
+                     style="width: 7vw"
+                     class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"
+                     >
+                     </span>
+     
+                     </div>
+     
+                     <div id="cuts-fee-subtext-vendor">
+     
+                     </div>
+     
+                   </td>
+                 </tr>
+     
+                 <!-- row 6 -->
+                 <!-- summary labels and copy-buttons -->
+                 <tr class="item-group-standard">
+     
+                   <!-- summary-box label -->
+                   <!-- showroom -->
+                   <td>
+                     <label
+                       class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                       for="summary-box">
+                         Summary
+                     </label>
+                   </td>
+     
+                   <!-- copy button for summary-box -->
+                   <!-- showroom -->
+                   <td>
+                     <button
+                     class="copy-button"
+                     onclick="copyToClipboard(this, 'summary-box')">
+                     Copy
+                     </button>
+                   </td>
+     
+                   <!-- summary-box label -->
+                   <!-- vendor -->
+                   <td>
+                     <label
+                       class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                       for="summary-box-vendor"
+                       style="margin-left: 7vw;"
+                       >
+                         Summary
+                     </label>
+                   </td>
+     
+                   <!-- copy button for summary-box -->
+                   <!-- vendor -->
+                   <td>
+                     <button
+                     class="copy-button"
+                     onclick="copyToClipboard(this, 'summary-box-vendor')">
+                     Copy
+                     </button>
+                   </td>
+     
+     
+                 </tr>
+     
+     
+                 <!-- row 7 -->
+                 <!-- summary boxes -->
+                 <tr style="height: 2vw;" class="item-group-standard">
+     
+                   <!-- summary-box span -->
+                   <!-- showroom -->
+                   <td colspan="2">
+                     <span class="summary-box gothica1-light-charade-light" id="summary-box"></span>
+                   </td>
+     
+                   <!-- summary-box span -->
+                   <!-- vendor -->
+                   <td style="margin-left: 4vw;">
+                     <span
+                     class="summary-box gothica1-light-charade-light"
+                     id="summary-box-vendor"></span>
+                   </td>
+                 </tr>
+     
+     
+               </table>
+     
+     
+             </div>
+     
+     
+     
+           </div>
+     
+         </div>
+       </div>
+    </div>
+
+    <div id="right-side-container" class="right-side-container">
+      <div class="form-header valign-text-middle lexenddeca-semi-bold-charade-m">
+        ITEM PHOTO
+      </div>
+      <div id="item-photo-container">
+        <img src="https://cdn.shopify.com/s/files/1/0345/7361/5236/products/animal-house-royale-wallpaper.jpg?v=1606929272" alt="test">
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<!------------ ROW 5 OLD ------------>
+
+<!-- <tr class="item-group-standard"> -->
+<!-- cfa offered? label -->
+<!-- <td> -->
+<!-- <label class="td-multi-item-label valign-text-middle gothica1-light-charade-14px" for="cfa-offered">CFA Offered?</label> -->
+<!-- </td> -->
+<!-- cfa offered? output -->
+<!-- <td> -->
+<!-- <span id="cfa-offered" style="width: 10vw" class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"></span> -->
+<!-- </td> -->
+<!-- cfa minimum label -->
+<!-- <td> -->
+<!-- <label style="width: 10vw;" for="cfa-minimum" class="td-multi-item-label valign-text-middle gothica1-light-charade-14px">CFA Minimum</label> -->
+<!-- </td> -->
+<!-- cfa minimum output -->
+<!-- <td> -->
+<!-- <span id="cfa-minimum" style="width: 10vw" class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit"></span> -->
+<!-- </td> -->
+<!-- </tr> -->

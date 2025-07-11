@@ -1,0 +1,248 @@
+<!-- 
+  To do:
+  9) 
+
+  Done:
+  2) Clean up formatting and sizing on the submit page
+    2a) Figure out how Morgan wanted the payment link field and button to work. I think it was invisible to start and then would appear once the "Generate Quote" button is pressed. However, in the Figma it looks like he designed it so that the button is disabled, so I need to clarify what he'd prefer.
+    2b) Move the iframe holding the displayed quote to the right side of the screen
+    2c) Make the text fields on the left side of the screen smaller horizontally
+  5) Attach click handler to copy link button
+  3) Connect to Stripe API, see the Amit Agarwal blog post to start
+  1) Get more quotes from Morgan to test and refine text extraction function
+  7) Ask Morgan how header buttons should work now that we're not doing a spreadsheet
+  8) Make generate link button disabled until all fields are filled out and after the link is generated
+
+  Canceled:
+  4) Ask Morgan to set up payment history spreadsheet and share it
+  6) Start writing logic for recording payment history to spreadsheet
+    6a) When a payment link is created a new line should be added
+    6b) When the client pays through the payment link the line should be updated
+--> 
+
+<script>
+  /**
+   * *******************************************************
+   * ***************** SET UP AND CLEAN UP *****************
+   * *******************************************************
+   */
+  function handleQuoteUpload(fileInput) {
+    if (!fileInput.files.length) {
+      alert("Please select a file to upload");
+      return;
+    }
+
+    const loadingIcon = document.getElementById('quote-upload-loading-icon')
+    loadingIcon.classList.remove('visually-hidden');
+
+    const quote = fileInput.files[0]
+    const fileReader = new FileReader();
+    fileReader.onload = handleReaderLoad;
+    fileReader.readAsDataURL(quote);
+
+    async function handleReaderLoad() {
+      const quoteData = fileReader.result.split(',').pop();
+      const quoteInfo = {
+        fileName: quote.name,
+        mimeType: quote.type,
+        data: quoteData,
+      }
+
+      const quoteResponse = await new Promise((resolve, reject) => {
+        google.script.run
+          .withFailureHandler(error => reject(error))
+          .withSuccessHandler(response => resolve(response))
+          .uploadQuote(quoteInfo)
+      })
+
+      navigation('payment-link-generator-submit', quoteResponse);
+    }
+  }
+
+  function configurePaymentLink(quoteInfo) {
+    // google.script.run
+    //   .withFailureHandler(error => console.warn(error))
+    //   .setStripeMode('test');
+
+    // Remove scrolling from the body, hide the loading icon for the clear button, and then reveal the header buttons
+    document.body.classList.add('no-scroll');
+    document.getElementById('clear-button-loading-icon').classList.add('visually-hidden');
+    document.getElementById('payment-link-submit-buttons-group').style.display = 'flex';
+
+    // Add the quoteId to the pdf viewer
+    const quoteLink = 'https://drive.google.com/file/d/' + quoteInfo.driveId + '/preview';
+    const quoteViewer = document.getElementById('quote-viewer')
+    quoteViewer.src = quoteLink;
+    quoteViewer.dataset.quoteId = quoteInfo.driveId;
+
+    // Add the extracted text to the invoice information text inputs
+    const allQuoteInputs = document.querySelectorAll('.quote-input');
+    allQuoteInputs.forEach(inputEl => {
+      inputEl.disabled = false;
+      const id = inputEl.id;
+      if (Object.hasOwn(quoteInfo, id)) {
+        const quoteVal = quoteInfo[id];
+        if (quoteVal === '') {
+          inputEl.placeholder = "MISSING"
+        } else {
+          inputEl.value = quoteVal;
+        }
+      } else {
+        console.log('no matching value for this input el:')
+        console.log(inputEl);
+      }
+    });
+
+    activateButtonHandlers();
+  }
+
+  function deconstructPaymentLink() {
+    // Add scrolling back to the body and hide the header buttons
+    document.body.classList.remove('no-scroll');
+    document.getElementById('payment-link-submit-buttons-group').style.display = 'none';
+
+    // Disable the clear button and remove its event listener
+    const clearButton = document.getElementById('payment-link-clear-button');
+    clearButton.removeEventListener('click', handleClearButtonClick);
+    clearButton.disabled = true;
+  }
+
+  /**
+   * *******************************************************
+   * ******************** EVENT HANDLERS *******************
+   * *******************************************************
+   */
+  function activateButtonHandlers() {
+    // Click handler for generate link button
+    const generateLinkButton = document.getElementById("gen-link-button");
+    generateLinkButton.addEventListener('click', handleGenerateLinkClick);
+    generateLinkButton.disabled = false;
+
+    // Click handler for copy link button
+    const copyLinkButton = document.getElementById("copy-link-button");
+    copyLinkButton.addEventListener('click', handleCopyLinkClick);
+
+    // Click handler for clear button in header
+    const clearButton = document.getElementById('payment-link-clear-button');
+    clearButton.addEventListener('click', handleClearButtonClick);
+    clearButton.disabled = false;
+
+    // // (TESTING) Test toggle in header
+    // const testToggleButtons = document.querySelectorAll('input[name="test-toggle"]');
+    // testToggleButtons.forEach(button => {
+    //   button.addEventListener('change', handleTestModeToggle);
+    // });
+  }
+   
+  async function handleGenerateLinkClick(e) {
+    e.preventDefault();
+
+    const loadingIcon = document.getElementById('link-generator-loading-icon');
+    loadingIcon.classList.remove('visually-hidden');
+
+    const generateLinkButton = document.getElementById('gen-link-button');
+    generateLinkButton.disabled = true;
+    generateLinkButton.style.cursor = 'default';
+    
+    try {
+      const quoteInfo = getQuoteInfo();
+      console.log('quoteInfo:', quoteInfo);
+
+      const paymentLinkInput = document.getElementById('payment-link');
+      const paymentLink = await getStripePaymentLink(quoteInfo);
+      paymentLinkInput.value = paymentLink;
+    } catch (error) {
+      const message = error.message;
+      if (message.includes("Missing this value:")) {
+        alert("Please fill out all fields before generating a payment link." + `\n${message}`);
+      } else if (message.includes("failed to")) {
+        alert("An error occurred while generating the payment link. Please try again later.");
+      } else {
+        alert("An unexpected error occurred. Check the console for the error message and contact your friendly neighborhood developer.");
+      }
+      console.log(error);
+      
+      loadingIcon.classList.add('visually-hidden');
+      generateLinkButton.disabled = false;
+      generateLinkButton.style.cursor = '';
+
+      return;
+    }
+
+    generateLinkButton.removeEventListener('click', handleGenerateLinkClick);
+
+    const copyLinkSection = document.getElementById('copy-link-section');
+    copyLinkSection.classList.remove('visually-hidden');
+    loadingIcon.classList.add('visually-hidden');
+  }
+
+  function handleCopyLinkClick(e) {
+    e.preventDefault();
+
+    const copyLinkButton = e.target;
+    const linkInputId = 'payment-link';
+
+    copyToClipboard(copyLinkButton, linkInputId); // See item-lookup-page-js.html
+  }
+
+  function handleClearButtonClick() {
+    const loadingIcon = document.getElementById('clear-button-loading-icon');
+    loadingIcon.classList.remove('visually-hidden');
+    navigation('payment-link-generator-upload');
+  }
+
+  // function handleTestModeToggle(e) {
+  //   const loadingIcon = document.getElementById('test-toggle-loading-icon');
+  //   loadingIcon.classList.remove('visually-hidden');
+
+  //   const mode = e.target.value;
+  //   console.log(mode);
+  //   google.script.run
+  //     .withFailureHandler(error => console.warn(error))
+  //     .withSuccessHandler(() => loadingIcon.classList.add('visually-hidden'))
+  //     .setStripeMode(mode);
+  // }
+
+  /**
+   * *******************************************************
+   * ********************* STRIPE API **********************
+   * *******************************************************
+   */
+   function getStripePaymentLink(quoteInfo) {
+    return new Promise((resolve, reject) => {
+      google.script.run
+        .withFailureHandler(error => reject(error))
+        .withSuccessHandler(paymentLink => resolve(paymentLink))
+        .createStripePaymentLink(quoteInfo);
+    });
+  }
+
+  /**
+   * *******************************************************
+   * *********************** UTILITY ***********************
+   * *******************************************************
+   */
+  function getQuoteInfo() {
+    const quoteInfo = {};
+    const allQuoteInputs = document.querySelectorAll('.quote-input');
+    for (const inputEl of allQuoteInputs) {
+      const id = inputEl.id;
+      const value = inputEl.value;
+      if (value === '' & id !== 'sidemark') {
+        throw new Error(`Missing this value: ${inputEl.id}`);
+      }
+      quoteInfo[id] = value;
+    }
+
+    quoteInfo.name = `${quoteInfo['client-name']} (Quote No: ${quoteInfo['quote-number']})`;
+    quoteInfo["unit-amount"] = quoteInfo['requested-deposit'];
+
+    const quoteViewer = document.getElementById('quote-viewer');
+    const quoteId = quoteViewer.dataset['quoteId'];
+    quoteInfo['quoteId'] = quoteId;
+
+    console.log(quoteInfo);
+
+    return quoteInfo;
+  }
+</script>

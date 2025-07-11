@@ -1,0 +1,44 @@
+<script>
+  document.addEventListener('DOMContentLoaded', configureLookerStudioLinks);
+
+  function configureLookerStudioLinks() {
+    const cacheData = sessionStorage.getItem('lsInfo');
+    let needToCache = false;
+
+    if (cacheData) {
+      handleGetInfoSuccess(JSON.parse(cacheData))
+    } else {
+      needToCache = true;
+      google.script.run
+        .withFailureHandler(error => console.log(error))
+        .withSuccessHandler(handleGetInfoSuccess)
+        .getLookerStudioInfo();
+    }
+
+    function handleGetInfoSuccess(lsInfo) {
+      if (needToCache) {
+        sessionStorage.setItem('lsInfo', JSON.stringify(lsInfo));
+      }
+
+      if (lsInfo.length) {
+        const linksContainer = document.getElementById('lsr-links-container');
+        linksContainer.style.display = 'block';
+
+        lsInfo.forEach(reportInfo => {
+          const reportLink = document.createElement('div');
+          reportLink.className = 'home-directory-item valign-text-middle gothica1-light-charade-14px'
+          reportLink.textContent = reportInfo.name
+          reportLink.addEventListener('click', () => navigation('looker-studio-reports', reportInfo.link));
+          linksContainer.appendChild(reportLink);
+        });
+
+        linksContainer.lastChild.classList.add('home-directory-group')
+      }
+    }
+  }  
+
+  function configureLookerStudioReportsPage(reportLink) {
+    const iframe = document.getElementById('lsIframe');
+    iframe.setAttribute('src', reportLink);
+  }
+</script>

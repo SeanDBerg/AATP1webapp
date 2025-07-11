@@ -1,0 +1,260 @@
+<div class="flex-row-1" style="margin-bottom: 8vw">
+  <!-- left border -->
+  <hr style="left: 15vw;" class="vertical-line-right-side">
+
+  <!-- right border -->
+  <hr class="vertical-line-right-side">
+
+  <div style="margin-top: 40px" class="center-all-container">
+
+    <div id="item-group-container-1">
+
+      <form id="carpet-sample-form" class="order-form">
+        <!-- this div is the "row" that goes left to right, holds the middle and right contents -->
+        <!-- this div holds 2 tables -->
+
+        <!------------------------------------------------- CLIENT INFO ------------------------------------------------------------>
+        <div class="order-section-div">
+          <div class="middle-order-div-margined">
+            <div id="client-info" style="margin-top: 3vw"
+              class="form-header valign-text-middle lexenddeca-semi-bold-charade-m">
+              CLIENT
+            </div>
+            <table class="order-table">
+              <tbody>
+
+                <!-- row 1 -->
+                <!-- client name -->
+
+                <!-- NEW 8.29.23 --------------------------------------------------------------------------------------->
+                <!-- client name -->
+                <!-- operates as pattern-name -->
+                <tr class="item-group-standard">
+                  <td>
+                    <label for="name"
+                      class="item-label-standard valign-text-middle gothica1-light-charade-14px">Name</label>
+                  </td>
+
+                  <td>
+                    <div class="custom-select">
+                      <input disabled value="" placeholder="Loading..." id="name" oninput="patternSearchOnInput(this)"
+                        onclick="patternSearchOnInput(this)" onchange="patternSelectorChange(this)"
+                        class="search-input middle-form-input gothica1-light-charade-light email-content"
+                        data-key="CLIENT NAME" />
+
+                      <ul id="options-list-1" class="options-list">
+                        <li style="color: #e0e0e0;" class="gothica1-light-charade-light"
+                          onclick="optionListSelection(this); patternSelectorChange(this); patternSearchOnInput(this)">
+                          Clear Selection</li>
+                        <!-- ...more options loaded from sheet(s) -->
+                      </ul>
+                    </div>
+
+                  </td>
+                </tr>
+
+                <!-- row 2 -->
+                <!-- contact name -->
+                <tr class="item-group-standard">
+                  <td>
+                    <label for="contact-name"
+                      class="item-label-standard valign-text-middle gothica1-light-charade-14px">Contact Name</label>
+                  </td>
+                  <td>
+                    <input disabled type="text" id="contact-name"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light required email-content"
+                      data-key="CLIENT CONTACT NAME">
+                    </input>
+                  </td>
+                </tr>
+
+                <!-- row 3 -->
+                <!-- client contact email -->
+                <tr class="item-group-standard">
+                  <td>
+                    <label for="contact-email"
+                      class="item-label-standard valign-text-middle gothica1-light-charade-14px">Contact Email</label>
+                  </td>
+                  <td>
+                    <input disabled type="email" id="contact-email"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light required email-content"
+                      data-key="CLIENT CONTACT EMAIL">
+                    </input>
+                  </td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <hr class="item-hr-margined">
+
+
+        <!------------------------------------------------- DELIVER TO --------------------------------------------------------------->
+
+        <div class="order-section-div">
+          <div class="middle-order-div-margined">
+            <div style="margin-bottom: 4vw">
+              <select disabled onchange="deliveryMethodCarpetSampleOnChange(this)" style="width: 18vw; height: 2vw;"
+                id="delivery-method"
+                class="middle-form-input form-header valign-text-middle lexenddeca-semi-bold-charade-m required email-content"
+                data-key="ORDER STATUS">
+                <option selected disabled>Delivery Method</option>
+                <option>Shipped</option>
+                <option>Picked up (Messenger)</option>
+                <option>Picked up (Client)</option>
+              </select>
+            </div>
+
+
+            <div id="delivery-header" class="form-header valign-text-middle lexenddeca-semi-bold-charade-m"
+              style="display:none">DELIVER TO</div>
+
+            <table style="display:none" id="delivery-table" class="order-table">
+              <tbody>
+
+                <!-- row 1 -->
+                <!-- name -->
+                <tr class="item-group-standard">
+
+                  <!-- name label -->
+                  <td>
+                    <label for="deliver-to-name"
+                      class="item-label-standard valign-text-middle gothica1-light-charade-14px">
+                      Name
+                    </label>
+                  </td>
+
+                  <!-- name -->
+                  <td>
+                    <input disabled id="deliver-to-name"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light required email-content"
+                      data-key="DELIVER TO NAME">
+                    </input>
+                  </td>
+                </tr>
+
+                <!-- row 2 -->
+                <!-- address -->
+                <tr class="item-group-standard">
+
+                  <!-- address label -->
+                  <td>
+                    <label for="deliver-to-address-street"
+                      class="item-label-standard valign-text-middle gothica1-light-charade-14px">
+                      Address
+                    </label>
+                  </td>
+
+                  <!-- address -->
+                  <td>
+                    <input disabled id="deliver-to-address-street"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light required email-content"
+                      data-key="DELIVER TO STREET ADDRESS">
+                    </input>
+                  </td>
+                </tr>
+
+                <!-- row 3 -->
+                <!-- city, state, zip -->
+                <tr class="item-group-standard">
+
+                  <!-- city label -->
+                  <td>
+                    <label for="deliver-to-address-city"
+                      class="item-label-standard valign-text-middle gothica1-light-charade-14px ">
+                      City
+                    </label>
+                  </td>
+
+                  <!-- city -->
+                  <td>
+                    <input style="width: 20vw" required id="deliver-to-address-city"
+                      class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light required email-content"
+                      data-key="DELIVER TO CITY">
+                    </input>
+                  </td>
+
+                  <!-- state label -->
+                  <td>
+                    <label style="width: 2vw" for="deliver-to-address-state"
+                      class="valign-text-middle gothica1-light-charade-light">
+                      State
+                    </label>
+                  </td>
+
+                  <!-- state -->
+                  <td>
+                    <input style="width: 3vw" disabled id="deliver-to-address-state"
+                      class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light uppercase required email-content"
+                      data-key="DELIVER TO STATE" />
+
+                  </td>
+
+                  <!-- zip label -->
+                  <td>
+                    <label style="width: 2vw" for="deliver-to-address-zip"
+                      class="valign-text-middle gothica1-light-charade-14px">
+                      Zip
+                    </label>
+                  </td>
+
+                  <!-- zip -->
+                  <td>
+                    <input style="width: 5vw" required id="deliver-to-address-zip"
+                      class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light required email-content"
+                      data-key="DELIVER TO ZIP">
+                    </input>
+                  </td>
+
+                </tr>
+
+                <!-- row 4 -->
+                <!-- contact name -->
+                <tr class="item-group-standard">
+
+                  <!-- contact name label -->
+                  <td>
+                    <label for="deliver-to-contact-name"
+                      class="item-label-standard valign-text-middle gothica1-light-charade-14px">Contact Name</label>
+                  </td>
+
+                  <!-- contact name -->
+                  <td class="td-stretch">
+                    <input style="width: -webkit-fill-available" required id="deliver-to-contact-name"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light required email-content"
+                      data-key="DELIVER TO CONTACT NAME">
+                    </input>
+                  </td>
+                </tr>
+
+
+
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+        <hr class="item-hr-margined">
+
+        <!------------------------------------------------- ITEMS ------------------------------------------------------------------>
+        <div class="order-section-div">
+          <div class="middle-order-div-margined">
+            <div class="form-header valign-text-middle lexenddeca-semi-bold-charade-m">CARPET SAMPLE</div>
+
+            <table id="carpet-sample-table-1" class="order-table">
+              <tbody>
+
+
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+
+
+
+      </form>
+    </div>
+  </div>
+</div>

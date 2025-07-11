@@ -1,0 +1,434 @@
+<script>
+  /**************************************************** SUBMIT AND EMAIL FORM **************************************************/
+function clearCarpetSampleForm(emailContentElements){
+    emailContentElements = emailContentElements || document.getElementById("carpet-sample-form").getElementsByClassName("email-content");
+
+    for (let e = 0; e < emailContentElements.length; e++) {
+    let elem = emailContentElements[e];
+    elem.value = ""
+    }
+
+    document.getElementById("delivery-method").value = "Delivery Method";
+
+    const itemNum = Number(destinationsObject["carpet-sample-page"].items.number);
+    
+    for(let t = 2; t <= itemNum; t++){
+      console.log({t});
+      let table = document.getElementById(`carpet-sample-table-${t}`);
+
+      table.parentNode.removeChild(table);
+    }
+
+    const firstTable = document.getElementById('carpet-sample-table-1');
+    const hiddenRow = firstTable.querySelector('.hidden-row');
+    if (hiddenRow) {
+      hiddenRow.classList.remove('hidden-row');
+      hiddenRow.style.display = '';
+    }
+
+    const packageTypeElem = document.getElementById('package-type');
+    packageTypeElem.value = '';
+
+    destinationsObject["carpet-sample-page"].items.number = 1;
+
+}
+
+
+
+
+
+
+
+
+
+  /**************************************************** SUBMIT AND EMAIL FORM **************************************************/
+function submitCarpetSampleForm() {
+  //this is the check out system
+
+  if (!validateCarpetSampleForm()) return
+
+  const checkType = destinationsObject.globals.destination;
+  const carpetSampleForm = document.getElementById("carpet-sample-form");
+  const deliveryMethodElem = document.getElementById("delivery-method");
+  const deliveryMethod = deliveryMethodElem.value;
+  const includeDeliveryInfo = deliveryMethod == "Shipped";
+  const emailContentElements = carpetSampleForm.getElementsByClassName("email-content");
+  const submitBtn = document.getElementById("carpet-sample-form-submit");
+  const formData = {checkType};
+
+  // const packageTypeElem = document.getElementById('package-type');
+  // formData["PACKAGE TYPE"] = packageTypeElem.value;
+
+  for (let e = 0; e < emailContentElements.length; e++) {
+    let elem = emailContentElements[e];
+    let key = elem.getAttribute("data-key");
+    let logId = elem.getAttribute("data-log-id");
+    let value = "";
+
+    if (elem.tagName === "INPUT" || elem.tagName === "SELECT") {
+      value = elem.value;
+    } else {
+      value = elem.textContent.trim();
+    };
+
+    // here, skip adding the delivery information to the form data if these conditions are met
+    if(
+      key.indexOf("DELIVERY") > -1 && 
+      key != "DELIVERY METHOD" && 
+      deliveryMethod != "Shipped"
+    ) continue;
+
+    if(key == "DELIVERY METHOD" && value == "Delivery Method" || value == "") value = "None";
+
+    formData[key] = { value, id: elem.id, logId };
+  };
+    
+  const {userName, userEmail} = destinationsObject.globals.user;
+  formData["SUBMITTED BY"] = {value: `${userName} - ${userEmail}`, id:""};
+
+  formData["amountItems"] = {value: destinationsObject["carpet-sample-page"].items.number, id:""};
+
+  submitBtn.innerHTML = "SUBMITTED";
+
+  console.log(formData);
+
+  google.script.run.withSuccessHandler(response => { 
+    console.log("SAVE COMPLETE");
+
+    submitBtn.innerHTML = "SUBMITTED";
+
+    setTimeout(() => {
+    submitBtn.innerHTML = "SUBMIT"
+    }, 2000);
+
+  }).sendCarpetSampleEmail(formData);
+
+  clearCarpetSampleForm(emailContentElements);
+}
+
+
+
+
+
+
+
+
+
+
+  /*************************************************** VALIDATE ALL FORM INPUTS *******************************************************************************/
+function validateCarpetSampleForm() {
+  const requiredInputs = document.querySelectorAll(".required");
+  const deliveryTable = document.getElementById("delivery-table");
+  const deliveryTableIsInvisible = deliveryTable.style.display == "none";
+  const ulElement = document.getElementById("options-list-1");
+  const nameListIds = extractIdsFromListItems(ulElement);
+
+  for (var i = 0; i < requiredInputs.length; i++) {
+    let flag = false;
+    let input = requiredInputs[i];
+    let parentTable = input.closest("table");
+    let parentTableId = parentTable ? parentTable.id : "";
+    let inputIsInvisible = parentTableId == deliveryTable.id;
+
+    if(deliveryTableIsInvisible && inputIsInvisible) continue;
+
+    let value = input.value.trim();
+
+    if(input.id == "name"){
+      if(!nameListIds.includes(input.value)) flag = true;
+    }
+
+    if(value === "" || value === "Delivery Method" || flag) {
+      alert(flag ? `"${value}" does not match an existing client name in the database.` : `"${input.id}" is a required field!`)
+      return false
+    }
+  }
+
+  return true;
+}
+
+function extractIdsFromListItems(ulElement){
+
+  // Initialize an array to store the option IDs
+  const optionIds = [];
+
+  // Check if the ul element exists
+  if (ulElement) {
+    // Iterate through the li elements within the ul
+    const liElements = ulElement.getElementsByTagName("li");
+    for (let i = 0; i < liElements.length; i++) {
+      const liElement = liElements[i];
+      // Get the id attribute of each li element and push it to the optionIds array
+      const optionId = liElement.getAttribute("id");
+      if (optionId) {
+        optionIds.push(optionId);
+      }
+    }
+  }
+
+  return optionIds
+}
+
+
+
+
+
+  /**************************************************** ADD CARPET SAMPLE ITEM ON CLICK *******************************************************/
+function addCarpetSampleRow(spanElem) {
+  const itemNum = destinationsObject["carpet-sample-page"].items.number;
+  const nextItemNum = Number(itemNum) + 1;
+  const table = spanElem.closest("table");
+  const clonedTable = table.cloneNode(true);
+
+  const idElements = clonedTable.querySelectorAll(`[id$='${itemNum}']`);
+  const forElements = clonedTable.querySelectorAll(`[for$='${itemNum}']`);
+  const dataKeyElements = clonedTable.querySelectorAll(`[data-key$='${itemNum}']`);
+  const liElements = clonedTable.querySelectorAll('li');
+
+  const newTableId = clonedTable.id.replace(itemNum, nextItemNum);
+  const lastTable = document.getElementById(`carpet-sample-table-${itemNum}`);
+  const headerCell = clonedTable.querySelector(".table-header");
+  const clickNewRow = spanElem.closest("tr");
+
+  clonedTable.id = newTableId;
+
+  idElements.forEach(elem => {
+    if(elem.id.indexOf("table-header-") > -1) {
+      let newDataKey = elem.getAttribute("data-key").replace(new RegExp(`${itemNum}$`), nextItemNum);
+      elem.setAttribute("data-key", newDataKey);
+      };
+
+    let newId = elem.id.replace(new RegExp(`${itemNum}$`), nextItemNum);
+    elem.id = newId;
+
+    if(elem.value) elem.value = "";
+  });
+
+  forElements.forEach(elem => {
+    if (elem.getAttribute("for").endsWith(itemNum)) {
+      let newFor = elem.getAttribute("for").replace(new RegExp(`${itemNum}$`), nextItemNum);
+      elem.setAttribute("for", newFor);
+    }
+  });
+
+  dataKeyElements.forEach(elem => {
+    if (elem.getAttribute("data-key").endsWith(itemNum)) {
+      let newDataKey = elem.getAttribute("data-key").replace(new RegExp(`${itemNum}$`), nextItemNum);
+      elem.setAttribute("data-key", newDataKey);
+    }
+  });
+
+  const rugDatabase = destinationsObject["carpet-sample-page"].rugDatabase;
+  liElements.forEach(elem => {
+    elem.onclick = () => {optionListSelection(elem); fillCarpetSampleOnChange(elem)};
+  });
+
+  if (headerCell) headerCell.textContent = `ITEM ${nextItemNum}`;
+  if (clickNewRow) {
+    clickNewRow.classList.add('hidden-row')
+    clickNewRow.style.display = 'none';
+    // clickNewRow.remove();
+  }
+
+  const cloneMainRow = clonedTable.querySelector('tr.main-row');
+  if (nextItemNum === 2) {
+    const removeEl = document.createElement('span');
+    removeEl.onclick = function() {removeCarpetSampleRow(this)};
+    removeEl.innerHTML = "&times;"
+    removeEl.classList.add('remove-duplicate')
+
+    const removeTd = document.createElement('td');
+    removeTd.appendChild(removeEl);
+    cloneMainRow.appendChild(removeTd);
+  } else {
+    const removeEl = cloneMainRow.querySelector('span.remove-duplicate');
+    removeEl.onclick = function() {removeCarpetSampleRow(this)};
+  }
+
+  const lastMainRow = lastTable.querySelector('tr.main-row');
+  const lastRemoveEl = lastMainRow.querySelector('span.remove-duplicate');
+  if (lastRemoveEl) {
+    lastRemoveEl.parentNode.remove();
+  }
+
+  lastTable.parentNode.insertBefore(clonedTable, lastTable.nextSibling);
+
+  destinationsObject["carpet-sample-page"].items.number = nextItemNum;
+}
+
+function removeCarpetSampleRow(removeEl) {
+  const itemNum = destinationsObject["carpet-sample-page"].items.number;
+  const table = removeEl.closest('table');
+  table.remove();
+
+  const lastItemNum = Number(itemNum) - 1;
+  const lastTable = document.getElementById(`carpet-sample-table-${lastItemNum}`);
+  const hiddenRow = lastTable.querySelector('.hidden-row');
+  if (hiddenRow) {
+    hiddenRow.classList.remove('hidden-row');
+    hiddenRow.style.display = '';
+  }
+
+  if (lastItemNum > 1) {
+    const mainRow = lastTable.querySelector('tr.main-row');
+    const removeTd = document.createElement('td');
+    const removeEl = document.createElement('span');
+
+    removeEl.onclick = function() {removeCarpetSampleRow(this)};
+    removeEl.innerHTML = "&times;"
+    removeEl.classList.add('remove-duplicate')
+    
+    removeTd.appendChild(removeEl);
+    mainRow.appendChild(removeTd);
+  }
+
+  destinationsObject["carpet-sample-page"].items.number = lastItemNum;
+}
+
+
+
+
+
+
+
+
+
+
+  /**************************************************** DELIVERY METHOD ON CHANGE *************************************************************************/
+function deliveryMethodCarpetSampleOnChange(selectElem){
+  //toggle the visibility of the delivery table
+  const method = selectElem.value;
+  const deliveryTableElem = document.getElementById("delivery-table");
+  const deliveryHeaderElem = document.getElementById("delivery-header");
+
+  try{
+
+
+  if(method == "Shipped") {
+    deliveryTableElem.style.display = "block"
+    deliveryHeaderElem.style.display = "block"
+    }
+  else {
+    deliveryTableElem.style.display = "none";
+    deliveryHeaderElem.style.display = "none";
+    }
+  } catch(error) { console.log(error) }
+}
+
+
+
+
+
+
+
+/**************************************************** CONFIGURE CARPET SAMPLE PAGE *************************************************************************/
+function configureCarpetSamplePage(destination){
+    /**
+     *  - load the clients into the drop down
+     *  - what else?
+     */
+
+  const clientInputElem = document.getElementById("name");
+  const clientListElem = document.getElementById("options-list-1");
+  const rugInputElem = document.getElementById("rugDropdown-1");
+  const rugListElem = document.getElementById("rug-options-list-1");
+
+  const buttonsDiv = document.getElementById("carpet-sample-buttons-group");
+  buttonsDiv.style.display = "flex";
+
+  google.script.run.withSuccessHandler(response => {
+    //in succession, load up the drop down menus on the page top to bottom
+    const { clients, rugDatabase } = JSON.parse(response);
+    Object.assign(destinationsObject["carpet-sample-page"], { clients, rugDatabase } )
+
+    for(c in clients){
+      let client = clients[c];
+      let option = document.createElement("li");
+      option.value = c;
+      option.textContent = c;
+      option.onclick = () => {optionListSelection(option); patternSelectorChange(option)}
+      option.id = c;
+      option.classList.add("gothica1-light-charade-light");
+
+      clientListElem.appendChild(option)
+    };
+    
+    clientInputElem.setAttribute("placeholder", "Search here");
+
+    for (r in rugDatabase) {
+      const option = document.createElement("li");
+      option.value = r;
+      option.textContent = r;
+      option.onclick = () => {optionListSelection(option); fillCarpetSampleOnChange(option)};
+      option.classList.add("gothica1-light-charade-light");
+
+      rugListElem.appendChild(option);
+    }
+
+    rugInputElem.setAttribute("placeholder", "Search here");
+
+    document.querySelector('tbody.add-item-button').style = "display: block"
+
+  }).loadPage(["clients", "rugDatabase"]);
+
+}
+
+
+
+
+
+
+
+
+/**************************************************** DECONTRUCT CARPET SAMPLE PAGE *************************************************************************/
+function deconstructCarpetSamplePage(){
+  const buttonsDiv = document.getElementById("carpet-sample-buttons-group");
+  buttonsDiv.style.display = "none";
+}
+
+
+
+
+
+
+/**************************************************** DECONTRUCT CARPET SAMPLE PAGE *************************************************************************/
+function fillCarpetSampleOnChange(elem) {
+  console.log('running fillCarpetSampleOnChange');
+  console.log(elem);
+
+  const itemTable = elem.closest("table");
+  console.log(itemTable);
+  const invisibleInputsDiv = itemTable.querySelector('tbody.invisible-inputs');
+  console.log(invisibleInputsDiv);
+  const invisibleInputs = invisibleInputsDiv.querySelectorAll('input');
+  
+  const selection = elem.textContent.trim();
+  if (selection === 'Clear Selection') {
+    invisibleInputs.forEach(inputEl => inputEl.value = '');
+  } else {
+    const rugDatabase = destinationsObject["carpet-sample-page"].rugDatabase;
+    const rugRow = rugDatabase[selection];
+    invisibleInputs.forEach(inputEl => {
+      inputEl.value = rugRow[inputEl.dataset.logId]
+    });
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>

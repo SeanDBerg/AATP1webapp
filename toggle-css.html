@@ -1,0 +1,139 @@
+<!-- 
+  I followed this guide:
+  https://hudecz.medium.com/how-to-create-a-pure-css-toggle-button-2fcc955a8984
+ -->
+
+ <style>
+  .toggle-radio {
+    display: none;
+  }
+
+  .toggle-container {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border: 2px outset black;
+    background: black;
+    color: black;
+    border-radius: 20px;
+    font-family: var(--font-family-gothic_a1);
+    font-size: var(--font-size-s);
+    font-style: normal;
+    font-weight: 800;
+    width: fit-content;
+    height: 2vw;
+    align-items: center;
+  }
+
+  .toggle-container::before {
+    content: '';
+    position: absolute;
+    width: calc(100% / 3);
+    height: 100%;
+    left: 0%;
+    background: white;
+    transition: all 0.3s;
+    border-radius: 20px;
+  }
+
+  .toggle-container label {
+    text-align: center;
+    z-index: 1;
+    padding: 0 15px;
+    cursor: pointer;
+  }
+
+  #clone-radio:checked ~ .toggle-container::before {
+    left: 0%;
+  }
+
+  #create-radio:checked ~ .toggle-container::before {
+    left: calc(100% / 3);
+  }
+
+  #edit-radio:checked ~ .toggle-container::before {
+    left: calc(2 * (100% / 3));
+  }
+
+  #clone-radio:checked ~ .toggle-container .create-mode,
+  #clone-radio:checked ~ .toggle-container .edit-mode {
+    color: white;
+    transition: color 0.3s;
+  }
+
+  #clone-radio:checked ~ .toggle-container .clone-mode {
+    color: black;
+    transition: color 0.3s;
+  }
+
+  #create-radio:checked ~ .toggle-container .clone-mode,
+  #create-radio:checked ~ .toggle-container .edit-mode {
+    color: white;
+    transition: color 0.3s;
+  }
+
+  #create-radio:checked ~ .toggle-container .create-mode {
+    color: black;
+    transition: color 0.3s;
+  }
+
+  #edit-radio:checked ~ .toggle-container .clone-mode,
+  #edit-radio:checked ~ .toggle-container .create-mode {
+    color: white;
+    transition: color 0.3s;
+  }
+
+  #edit-radio:checked ~ .toggle-container .edit-mode {
+    color: black;
+    transition: color 0.3s;
+  }
+</style>
+
+<!-- <style>
+  .toggle-checkbox {
+    display: none;
+  }
+
+  .toggle-container {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    border: 2px outset black;
+    background: black;
+    color: black;
+    cursor: pointer;
+    border-radius: 20px;
+  }
+
+  .toggle-container::before {
+    content: '';
+    position: absolute;
+    width: 50%;
+    height: 100%;
+    left: 0%;
+    background: white;
+    transition: all 0.3s;
+    border-radius: 20px;
+  }
+
+  .toggle-container div {
+    text-align: center;
+    z-index: 1;
+  }
+
+  .toggle-checkbox:checked + .toggle-container::before {
+    left: 50%;
+  }
+
+  .toggle-checkbox + .toggle-container div:last-child,
+  .toggle-checkbox:checked + .toggle-container div:first-child {
+    color: white;
+    transition: color 0.3s;
+  }
+  
+  .toggle-checkbox + .toggle-container div:first-child,
+  .toggle-checkbox:checked + .toggle-container div:last-child {
+    color: black;
+    transition: color 0.3s;
+  }
+</style> -->

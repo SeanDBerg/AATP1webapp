@@ -1,0 +1,2215 @@
+<div class="container-center-horizontal">
+  <div>
+    <div class="flex-row-1">
+
+      <!-- LEFT SIDE NAV -->
+      <div id="left-side-nav" class="left-side-nav">
+        <div onclick="navbarSelection(this, 'client-info')"
+          class="nav-header-selected nav-header valign-text-middle gothica1-normal-charade-16px">
+          Main
+        </div>
+        <div onclick="navbarSelection(this, 'item-info-1')" id="item-navbar-1"
+          class="nav-header-unselected nav-header valign-text-middle gothica1-normal-charade-16px">
+          Item 1
+        </div>
+        <div onclick="createNewItem(this)" class="add-item valign-text-middle gothica1-light-charade-14px">
+          + Add Item
+        </div>
+        <div onclick="navbarSelection(this, 'freight-section')"
+          class="nav-header-unselected nav-header valign-text-middle gothica1-normal-charade-16px">
+          Freight
+        </div>
+        <div onclick="navbarSelection(this, 'tracking-section')"
+          class="nav-header-unselected nav-header valign-text-middle gothica1-normal-charade-16px">
+          Tracking
+        </div>
+        <div onclick="navbarSelection(this, 'payments-section')"
+          class="nav-header-unselected nav-header valign-text-middle gothica1-normal-charade-16px">
+          Payments
+        </div>
+        <div onclick="navbarSelection(this, 'summary-section')"
+          class="nav-header-unselected nav-header valign-text-middle gothica1-normal-charade-16px">
+          Summary
+        </div>
+      </div>
+
+      <hr class="vertical-line-left-side">
+      <hr class="vertical-line-right-side">
+
+      <!-- MIDDLE & LEFT SECTION CONTENT -->
+      <div class="body-section">
+        <form id="order-form" class="order-form">
+          <!-- this div is the "row" that goes left to right, holds the middle and right contents -->
+          <!-- this div holds 2 tables -->
+
+          <!------------------------------------------------- CLIENT INFO ------------------------------------------------------------>
+          <div class="order-section-div">
+            <div class="middle-order-div">
+              <div id="client-info" style="margin-top: 3vw"
+                class="form-header valign-text-middle lexenddeca-semi-bold-charade-m">
+                CLIENT
+              </div>
+              <table class="order-table">
+                <tbody>
+
+                  <!-- row 1 -->
+                  <!-- client name -->
+                  <tr class="item-group-standard">
+
+                    <!-- name label -->
+                    <td>
+                      <label for="name" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Name</label>
+                    </td>
+
+                    <!-- name -->
+                    <td>
+                      <select
+                      onchange="clientNameSelectorChange(this)"
+                      value=""
+                      id="name"
+                      class="middle-form-input gothica1-light-charade-light"
+                      data-key="CLIENT NAME"
+                      >
+                        <option 
+                        id="placeholder-client-name-option" 
+                        value="">
+                        Loading...
+                        </option>
+                      </select>
+                    </td>
+                  </tr>
+
+                  <!-- row 2 -->
+                  <!-- client address -->
+                  <tr class="item-group-standard">
+
+                    <!-- address label -->
+                    <td>
+                      <label for="street-address" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Address</label>
+                    </td>
+
+                    <!-- address -->
+                    <td>
+                      <span
+                       id="street-address"
+                       class="form-static-span valign-text-middle gothica1-light-charade-light user-no-edit"
+                       data-key="CLIENT ADDRESS1"
+                       ></span>
+                    </td>
+                  </tr>
+
+                  <!-- row 3 -->
+                  <!-- client city, state, zip -->
+                  <tr class="item-group-standard">
+                    <td>
+                      <label for="address-line-city-state-zip" class="item-label-standard valign-text-middle gothica1-light-charade-14px">City, State & Zip</label>
+                    </td>
+                    <td>
+                      <span
+                      id="address-line-city-state-zip"
+                      class="form-static-span valign-text-middle gothica1-light-charade-light user-no-edit"
+                      data-key="CLIENT CITY, CLIENT STATE, CLIENT POSTAL CODE"
+                      >
+                      </span>
+                    </td>
+                  </tr>
+
+                  <!-- row 4 -->
+                  <!-- client country -->
+                  <tr class="item-group-standard">
+                    <td>
+                      <label for="address-line-country" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Country</label>
+                    </td>
+                    <td>
+                      <span
+                      id="country"
+                      class="form-static-span valign-text-middle gothica1-light-charade-light user-no-edit"
+                      data-key="CLIENT COUNTRY"
+                      >
+                      </span>
+                    </td>
+                  </tr>
+
+                  <!-- row 5 -->
+                  <!-- client contact name -->
+                  <tr class="item-group-standard">
+                    <td>
+                      <label for="contact-name" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Contact Name</label>
+                    </td>
+                    <td>
+                      <input
+                      required
+                      type="text"
+                      id="contact-name"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light user-no-edit"
+                      data-key="CLIENT CONTACT NAME"
+                      >
+                      </input>
+                    </td>
+                  </tr>
+
+                  <!-- row 6 -->
+                  <!-- client contact email -->
+                  <tr class="item-group-standard">
+                    <td>
+                      <label for="contact-email" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Contact Email</label>
+                    </td>
+                    <td>
+                      <input
+                      required
+                      type="email"
+                      id="contact-email"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light user-no-edit"
+                      data-key="CLIENT CONTACT EMAIL"
+                      >
+                      </input>
+                    </td>
+                  </tr>
+
+                </tbody>
+              </table>
+            </div>
+
+            <div class="right-order-div" style="margin-top: 3vw;">
+              <div id="client-info" class="form-header valign-text-middle lexenddeca-semi-bold-charade-m">
+                DATES
+              </div>
+              <table class="order-table">
+                <tbody>
+
+                  <!-- row 1 -->
+                  <!-- quote date -->
+                  <tr class="item-group-standard">
+                    <td>
+                      <label for="quote-date" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Quote Date</label>
+                    </td>
+                    <td>
+                      <!-- add scriptlet for current date here. if this is a new one, new date, if it is existing and being edited, pull that original date from the data -->
+                      <input
+                      disabled
+                      type="date"
+                      value=""
+                      id="quote-date"
+                      class="right-form-input gothica1-light-charade-light user-no-edit"
+                      data-key="QUOTE DATE"
+                      />
+                    </td>
+                  </tr>
+
+                  <!-- row 2 -->
+                  <!-- date quote revised -->
+                  <tr class="item-group-standard">
+                    <td>
+                      <label for="quote-revision-date" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Date Quote Revised</label>
+                    </td>
+                    <td>
+                      <!-- add scriptlet for current date here. -->
+                      <input
+                      disabled
+                      type="date"
+                      value=""
+                      id="quote-revision-date"
+                      class="right-form-input gothica1-light-charade-light user-no-edit"
+                      data-key="DATE QUOTE REVISED"
+                      />
+                    </td>
+                  </tr>
+
+
+                  <!-- row 3 -->
+                  <!-- date payment received -->
+                  <tr class="item-group-standard">
+                    <td>
+                      <label for="date-payment-received" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Date Payment Received</label>
+                    </td>
+                    <td>
+                      <input
+                      type="date"
+                      value=""
+                      id="date-payment-received"
+                      class="right-form-input gothica1-light-charade-light"
+                      data-key="DATE PAYMENT RECEIVED"
+                      />
+                    </td>
+                  </tr>
+
+                  <!-- row 4 -->
+                  <!-- purchase order date -->
+                  <tr class="item-group-standard">
+                    <td>
+                      <label for="purchase-order-date" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Purchase Order Date</label>
+                    </td>
+                    <td>
+                      <input
+                      type="date"
+                      value=""
+                      id="purchase-order-date"
+                      class="right-form-input gothica1-light-charade-light"
+                      data-key="PURCHASE ORDER DATE"
+                      />
+                    </td>
+                  </tr>
+
+                  <!-- row 5 -->
+                  <!--date purchase order revised -->
+                  <tr class="item-group-standard">
+                    <td>
+                      <label for="date-purchase-order-revised" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Date Purchase Order Revised</label>
+                    </td>
+                    <td>
+                      <input
+                      type="date"
+                      value=""
+                      id="date-purchase-order-revised"
+                      class="right-form-input gothica1-light-charade-light"
+                      data-key="DATE PURCHASE ORDER REVISED"
+                      />
+                    </td>
+                  </tr>
+
+                  <!-- row 6 -->
+                  <!-- date closed -->
+                  <tr class="item-group-standard">
+                    <td>
+                      <label for="date-closed" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Date Closed</label>
+                    </td>
+                    <td>
+                      <input
+                      type="date"
+                      value=""
+                      id="date-closed"
+                      class="right-form-input gothica1-light-charade-light"
+                      data-key="DATE CLOSED"
+                      />
+                    </td>
+                  </tr>
+
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <hr class="item-hr">
+
+
+          <!------------------------------------------------- DELIVER TO --------------------------------------------------------------->
+
+          <div class="order-section-div">
+            <div class="middle-order-div">
+              <div class="form-header valign-text-middle lexenddeca-semi-bold-charade-m">DELIVER TO</div>
+
+              <table class="order-table">
+                <tbody>
+
+                  <!-- row 1 -->
+                  <!-- name -->
+                  <tr class="item-group-standard">
+
+                    <!-- name label -->
+                    <td>
+                      <label
+                      for="deliver-to-name"
+                      class="item-label-standard valign-text-middle gothica1-light-charade-14px">
+                    Name
+                    </label>
+                    </td>
+
+                    <!-- name -->
+                    <td>
+                      <input
+                      required
+                      id="deliver-to-name"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                      data-key="DELIVERY NAME"
+                      >
+                      </input>
+                    </td>
+                  </tr>
+
+                  <!-- row 2 -->
+                  <!-- address -->
+                  <tr class="item-group-standard">
+
+                    <!-- address label -->
+                    <td>
+                      <label
+                      for="deliver-to-address-street"
+                      class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                      >
+                    Address
+                    </label>
+                    </td>
+
+                    <!-- address -->
+                    <td>
+                      <input
+                      required
+                      id="deliver-to-address-street"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                      data-key="DELIVERY ADDRESS1"
+                      >
+                      </input>
+                    </td>
+                  </tr>
+
+                  <!-- row 3 -->
+                  <!-- city, state, zip -->
+                  <tr class="item-group-standard">
+
+                    <!-- city label -->
+                    <td>
+                      <label
+                        for="deliver-to-address-city"
+                        class="item-label-standard valign-text-middle gothica1-light-charade-14px">
+                      City
+                      </label>
+                    </td>
+
+                    <!-- city -->
+                    <td>
+                      <input
+                      style="width: 20vw"
+                      required
+                      id="deliver-to-address-city"
+                      class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light"
+                      data-key="DELIVERY CITY"
+                      >
+                      </input>
+                    </td>
+
+                    <!-- state label -->
+                    <td>
+                      <label
+                      style="width: 2vw"
+                      for="deliver-to-address-state"
+                      class="valign-text-middle gothica1-light-charade-light">
+                      State
+                      </label>
+                    </td>
+
+                    <!-- state -->
+                    <td>
+                      <input
+                      style="width: 3vw"
+                      required
+                      id="deliver-to-address-state"
+                      class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light uppercase"
+                      data-key="DELIVERY STATE"
+                      />
+
+                    </td>
+
+                    <!-- zip label -->
+                    <td>
+                      <label
+                      style="width: 2vw"
+                      for="deliver-to-address-zip"
+                      class="valign-text-middle gothica1-light-charade-14px">
+                      Zip
+                      </label>
+                    </td>
+
+                    <!-- zip -->
+                    <td>
+                      <input
+                      style="width: 5vw"
+                      required
+                      id="deliver-to-address-zip"
+                      class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light"
+                      data-key="DELIVERY POSTAL CODE"
+                      >
+                      </input>
+                    </td>
+
+                  </tr>
+
+                  <!-- row 4 -->
+                  <!-- contact name -->
+                  <tr class="item-group-standard">
+
+                    <!-- contact name label -->
+                    <td>
+                      <label for="deliver-to-contact-name" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Contact Name</label>
+                    </td>
+
+                    <!-- contact name -->
+                    <td class="td-stretch">
+                      <input
+                      style="width: -webkit-fill-available"
+                       required
+                       id="deliver-to-contact-name"
+                       class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                       data-key="DELIVERY CONTACT NAME"
+                       >
+                      </input>
+                    </td>
+                  </tr>
+
+                  <!-- row 5 -->
+                  <!-- contact email -->
+                  <tr class="item-group-standard">
+
+                    <!-- contact email label -->
+                    <td>
+                      <label for="deliver-to-contact-email" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Contact Email</label>
+                    </td>
+
+                    <!-- contact email -->
+                    <td class="td-stretch">
+                      <input
+                      style="width: -webkit-fill-available"
+                      required
+                      type="email"
+                      id="deliver-to-contact-email"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                      data-key="DELIVERY CONTACT EMAIL"
+                      >
+                      </input>
+                    </td>
+                  </tr>
+
+                </tbody>
+              </table>
+            </div>
+
+            <div class="right-order-div">
+              <div id="client-info" class="form-header valign-text-middle lexenddeca-semi-bold-charade-m">
+                MISCELLANEOUS
+              </div>
+              <table class="order-table">
+                <tbody>
+
+                  <!-- row 1 -->
+                  <!-- client purchase order -->
+                  <tr class="item-group-standard">
+                    <td>
+                      <label for="client-purchase-order" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Client Purchase Order</label>
+                    </td>
+                    <td>
+                      <!-- add scriptlet for current date here. if this is a new one, new date, if it is existing and being edited, pull that original date from the data -->
+                      <input
+                      value=""
+                      id="client-purchase-order"
+                      class="right-form-input gothica1-light-charade-light"
+                      data-key="CLIENT PURCHASE ORDER"
+                      />
+                    </td>
+                  </tr>
+
+                  <!-- row 2 -->
+                  <!-- misc quote date revised -->
+                  <tr class="item-group-standard">
+                    <td>
+                      <label for="misc-date-quote-revised" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Date Quote Revised</label>
+                    </td>
+                    <td>
+                      <!-- add scriptlet for current date here. if this is a new one, new date, if it is existing and being edited, pull that original date from the data? -->
+                      <input
+                      type="date"
+                      value=""
+                      id="misc-date-quote-revised"
+                      class="right-form-input gothica1-light-charade-light"
+                      data-key="MISC DATE QUOTE REVISED"
+                      />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <!-- <hr class="item-hr-right" style="margin-top: 3vw;"> -->
+            </div>
+          </div>
+          <hr class="item-hr">
+
+          <!------------------------------------------------- CFA TO ------------------------------------------------------------------>
+          <div class="order-section-div">
+            <div class="middle-order-div">
+              <div class="form-header valign-text-middle lexenddeca-semi-bold-charade-m">CFA TO</div>
+
+              <table class="order-table">
+                <tbody>
+
+                  <!-- row 1 -->
+                  <!-- CFA name -->
+                  <tr class="item-group-standard">
+
+                    <!-- name label -->
+                    <td>
+                      <label for="cfa-to-name" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Name</label>
+                    </td>
+
+                    <!-- name -->
+                    <td>
+                      <input
+                      required
+                      type="text"
+                      id="cfa-to-name"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                      data-key="CFA/STRIKE-OFF/STRIKE-OFF NAME"
+                      >
+                      </input>
+                    </td>
+                  </tr>
+
+                  <!-- row 2 -->
+                  <!-- CFA address -->
+                  <tr class="item-group-standard">
+
+                    <!-- address label -->
+                    <td>
+                      <label for="cfa-to-address-street" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Address</label>
+                    </td>
+
+                    <!-- address -->
+                    <td>
+                      <input
+                      required
+                      type="text"
+                      id="cfa-to-address-street"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                      data-key="CFA/STRIKE-OFF/STRIKE-OFF ADDRESS1"
+                      >
+                      </input>
+                    </td>
+                  </tr>
+
+                  <!-- row 3 -->
+                  <!-- CFA city, state, zip -->
+                  <tr class="item-group-standard">
+
+                    <!-- city label -->
+                    <td>
+                      <label for="cfa-to-address-city"
+                        class="item-label-standard valign-text-middle gothica1-light-charade-14px">
+                        City
+                        </label>
+                    </td>
+
+                    <!-- city -->
+                    <td>
+                      <input
+                        style="width:20vw"
+                        required
+                        id="cfa-to-address-city"
+                        class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light"
+                        data-key="CFA/STRIKE-OFF/STRIKE-OFF CITY"
+                        >
+                      </input>
+                    </td>
+
+                    <!-- state label -->
+                    <td>
+                      <label
+                        style="width: 2vw;"
+                        for="cfa-to-address-state"
+                        class="td-multi-item-label valign-text-middle gothica1-light-charade-14px">
+                        State
+                        </label>
+                    </td>
+
+                    <!-- state -->
+                    <td>
+                      <input
+                        style="width: 3vw"
+                        required
+                        id="cfa-to-address-state"
+                        class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light"
+                        data-key="CFA/STRIKE-OFF/STRIKE-OFF STATE"
+                        >
+                      </input>
+                    </td>
+
+                    <!-- zip label -->
+                    <td>
+                      <label
+                      style="width: 2vw"
+                      for="cfa-to-address-zip"
+                      class="td-multi-item-label valign-text-middle gothica1-light-charade-14px">
+                      Zip
+                      </label>
+                    </td>
+
+                    <!-- zip -->
+                    <td>
+                      <input
+                      style="width: 5vw"
+                      required
+                      id="cfa-to-address-zip"
+                      class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light"
+                      data-key="CFA/STRIKE-OFF/STRIKE-OFF POSTAL CODE"
+                      >
+                      </input>
+                    </td>
+                  </tr>
+
+                  <!-- row 4 -->
+                  <!-- contact name -->
+                  <tr class="item-group-standard">
+                    <td>
+                      <label for="cfa-to-contact-name" class="item-label-standard valign-text-middle gothica1-light-charade-14px">
+                        Contact Name
+                        </label>
+                    </td>
+                    <td>
+                      <input
+                      required
+                      type="text"
+                      id="cfa-to-contact-name"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                      data-key="CFA/STRIKE-OFF/STRIKE-OFF CONTACT NAME"
+                      >
+                      </input>
+                    </td>
+                  </tr>
+
+                  <!-- row 5 -->
+                  <!-- contact email -->
+                  <tr class="item-group-standard">
+                    <td>
+                      <label for="cfa-to-contact-email" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Contact Email</label>
+                    </td>
+                    <td>
+                      <input
+                      required
+                      type="email"
+                      id="cfa-to-contact-email"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                      data-key="CFA/STRIKE-OFF/STRIKE-OFF CONTACT EMAIL"
+                      >
+                      </input>
+                    </td>
+                  </tr>
+
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+
+          <!-- <hr class="item-hr" /> -->
+
+          <div class="full-divider">
+            <div>
+              <hr class="item-hr">
+            </div>
+            <div>
+              <hr class="item-hr-right">
+            </div>
+          </div>
+
+          <!------------------------------------------------- ITEM INFO ------------------------------------------------------------>
+          <div id="item-group-container-1">
+            <div class="order-section-div ">
+
+              <div class="middle-order-div">
+                <div id="item-info-1" class="form-header valign-text-middle lexenddeca-semi-bold-charade-m">
+                  ITEM
+                </div>
+
+                <table class="order-table">
+                  <tbody>
+
+                    <!-- row 1 -->
+                    <!-- pattern name -->
+                    <tr class="item-group-standard">
+                      <td>
+                        <label
+                      for="pattern-name-1"
+                      class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                      >
+                      Pattern Name
+                      </label>
+                      </td>
+                      <td>
+                        <!-- THIS NEEDS ATTENTION AND RECONFIGURATION 8.29.23 -->
+                        <select
+                      onchange="patternSelectorChange(this)"
+                      value=""
+                      id="pattern-name-1"
+                      class="middle-form-input gothica1-light-charade-light"
+                      data-key="PATTERN NAME"
+                      >
+                      <option value=""></option>
+                      </select>
+                      </td>
+                    </tr>
+
+                    <!-- row 2 -->
+                    <!-- colorway -->
+                    <tr class="item-group-standard">
+                      <td>
+                        <label
+                      for="colorway-1"
+                      class="item-label-standard valign-text-middle gothica1-light-charade-14px">
+                      Colorway
+                      </label>
+                      </td>
+                      <td>
+                        <select
+                      onchange="colorwaySelectorChange(this)"
+                      value="" id="colorway-1"
+                      class="middle-form-input gothica1-light-charade-light"
+                      data-key="COLORWAY"
+                      >
+                  <!-- add scriptlet with pattern name population here -->
+                  <option value=""></option>
+            </select>
+                      </td>
+                    </tr>
+
+                    <!-- row 3 -->
+                    <!-- temple code and vendor name -->
+                    <tr class="item-group-standard">
+
+                      <!-- temple code label -->
+                      <td>
+                        <label
+                      for="temple-code-1"
+                      class="item-label-standard valign-text-middle gothica1-light-charade-14px">
+                      Temple Code
+                      </label>
+                      </td>
+
+                      <!-- temple code -->
+                      <td style="width: 8vw;">
+                        <input
+                        value=""
+                        disabled
+                        class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light user-no-edit"
+                        id="temple-code-1"
+                        data-key="TEMPLE CODE"
+                        >
+                        </input>
+                      </td>
+
+                      <!-- vendor name label -->
+                      <td style="width: 8vw;">
+                        <label
+                        class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                        for="vendor-name-1">
+                        Vendor Name
+                        </label>
+                      </td>
+
+                      <!-- vendor name -->
+                      <td>
+                        <input
+                        value=""
+                        style="width: 19vw"
+                        disabled
+                        id="vendor-name-1"
+                        class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light user-no-edit"
+                        data-key="VENDOR"
+                        >
+                        </input>
+                      </td>
+                    </tr>
+
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="right-order-div">
+
+                <img id="item-image-1" class="item-image" src="" />
+
+              </div>
+
+            </div>
+
+            <hr class="item-hr " />
+
+            <!------------------------------------------------- ITEM PRICE ------------------------------------------------------------>
+            <div class="order-section-div ">
+              <div class="middle-order-div">
+                <div class="form-header valign-text-middle lexenddeca-semi-bold-charade-m">PRICE</div>
+
+                <table class="order-table">
+                  <tbody>
+
+                    <!-- row 1 -->
+                    <!-- base price info -->
+                    <tr class="item-group-standard">
+
+                      <!-- price label -->
+                      <td>
+                        <label
+                        style="width: 4w"
+                        class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                        id="price-type-1">
+                        </label>
+                      </td>
+
+                      <!-- price-unit-cost -->
+                      <td style="width: 4vw">
+                        <input
+                        disabled
+                        id="price-unit-cost-1"
+                        class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light user-no-edit"
+                        data-key="CLIENT PRICE PER UNIT (SHOWROOM CURRENCY)"
+                        >
+                        </input>
+                      </td>
+
+                      <!-- per -->
+                      <td>
+                        <span class="valign-text-middle gothica1-light-charade-light">
+                      per
+                      </span>
+                      </td>
+
+                      <!-- vendor-unit-of-measure -->
+                      <td style="width: 4vw">
+                        <input
+                        disabled
+                        id="vendor-unit-of-measure-1"
+                        class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light user-no-edit"
+                        data-key="VENDOR UNIT OF MEASURE"
+                        >
+                        </input>
+                      </td>
+
+                      <!-- showroom cost label -->
+                      <td style="margin-left: 2vw">
+                        <label
+                      style=" width: 9vw"
+                      for="showroom-cost-1"
+                      class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                      >
+                        Showroom Cost
+                        </label>
+                      </td>
+
+                      <!-- showroom-cost -->
+                      <td style="width: 4vw;">
+                        <input
+                        disabled
+                        id="showroom-cost-1"
+                        class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light user-no-edit"
+                        data-key="SHOWROOM COST PER UNIT (SHOWROOM CURRENCY)"
+                        >
+                        </input>
+                      </td>
+
+                      <!-- per -->
+                      <td>
+                        <span class="valign-text-middle gothica1-light-charade-light">
+                      per
+                      </span>
+                      </td>
+
+                      <!-- unit-of-measure -->
+                      <td style="width: 5vw;">
+                        <input
+                      disabled
+                      id="showroom-unit-of-measure-1"
+                      class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light user-no-edit"
+                      data-key="SHOWROOM UNIT OF MEASURE"
+                      >
+                        </input>
+                      </td>
+                    </tr>
+
+                    <!-- row 2 -->
+                    <!-- approvals and override -->
+                    <tr class="item-group-standard">
+
+                      <!-- checkbox manual override, label and input combined -->
+                      <td style="display: flex; gap: 1.5vw">
+                        <label
+                        class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                        for="manual-override-1">
+                        Manual Override
+                        </label>
+
+                        <input
+                        style="height: 16px; width: 16px;"
+                        onchange="revealClientPriceOverride(this)"
+                        type="checkbox"
+                        id="manual-override-1"
+                        data-key="MANUAL PRICE OVERRIDE"
+                        />
+                      </td>
+                    </tr>
+
+                    <!-- row 3 -->
+                    <!-- approvals -->
+                    <!-- hidden -->
+                    <tr style="display: none" id="client-price-row-3-1" class="item-group-standard">
+
+                      <!-- approved by label -->
+                      <td>
+                        <label
+                        class="td-multi-item-label valign-text-middle gothica1-light-charade-14px "
+                        for="approved-by-1">
+                        Approved By
+                        </label>
+                      </td>
+
+                      <!-- approved by -->
+                      <td>
+                        <input
+                          style="width: 7.5vw;"
+                          disabled
+                          id="approved-by-1"
+                          class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                          data-key="MANUAL PRICE OVERRIDE APPROVED BY"
+                          >
+                        </input>
+                      </td>
+
+                      <!-- date approved label -->
+                      <td>
+                        <label
+                          for="date-approved-1"
+                          class="td-multi-item-label valign-text-middle gothica1-light-charade-14px "
+                        >
+                        Date Approved
+                        </label>
+                      </td>
+
+                      <!-- date approved -->
+                      <td>
+                        <input
+                        id="date-approved-1"
+                        disabled
+                        style="width: 7vw; flex-direction: row"
+                        type="date"
+                        class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                        data-key="MANUAL PRICE OVERRIDE DATE APPROVED"
+                        >
+                        </input>
+                      </td>
+                    </tr>
+
+                    <!-- row 4 -->
+                    <!-- client price and others -->
+                    <!-- hidden -->
+                    <tr id="client-price-row-4-1" style="display: none" class="item-group-standard">
+
+                      <!-- client price label -->
+                      <td>
+                        <label class="td-multi-item-label valign-text-middle gothica1-light-charade-14px ">
+                      Client Price
+                      </label>
+                      </td>
+
+                      <!-- client-price -->
+                      <td>
+                        <input
+                        onchange="sumTotals()"
+                        style="width: 4vw"
+                        id="client-price-1"
+                        class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light"
+                        type="number"
+                        min="0"
+                        data-key="CLIENT PRICE PER UNIT (SHOWROOM CURRENCY)"
+                        />
+                      </td>
+
+                      <!-- per  -->
+                      <td>
+                        <span class="valign-text-middle gothica1-light-charade-light">
+                        per
+                        </span>
+                      </td>
+
+                      <!-- client price unit per measure -->
+                      <td>
+                        <input
+                        style="width: 5vw; text-transform: uppercase;"
+                        id="client-price-measure-per-1"
+                        class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light"
+                        type="text"
+                        data-key="SHOWROOM UNIT OF MEASURE"
+                        />
+                      </td>
+
+                      <!-- client showroom cost label -->
+                      <td>
+                        <label
+                        style="margin-left: 0.5vw;"
+                        for="client-showroom-cost-1"
+                        class="td-multi-item-label valign-text-middle gothica1-light-charade-14px ">
+                        Showroom Cost
+                        </label>
+                      </td>
+
+                      <!-- client showroom cost -->
+                      <td>
+                        <input
+                        id="client-showroom-cost-1"
+                        style="width: 4vw;"
+                        class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light"
+                        type="number"
+                        min="0"
+                        data-key="SHOWROOM COST PER UNIT (SHOWROOM CURRENCY)"
+                        />
+                      </td>
+
+                      <!-- per -->
+                      <td>
+                        <span class="valign-text-middle gothica1-light-charade-light">
+                        per
+                        </span>
+                      </td>
+
+                      <!-- unit of measure -->
+                      <td>
+                        <input
+                        style="width: 5vw; text-transform: uppercase;"
+                        class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light"
+                        id="client-showroom-cost-measure-per-1"
+                        type="text"
+                        data_key="CLIENT PRICE PER UNIT (SHOWROOM CURRENCY)"
+                        />
+                      </td>
+                    </tr>
+
+                    <!-- row 5 -->
+                    <!-- quantity -->
+                    <tr class="item-group-standard">
+
+                      <!-- quantity label -->
+                      <td>
+                        <label class="td-multi-item-label valign-text-middle gothica1-light-charade-14px">
+                      Quantity
+                      </label>
+                      </td>
+
+                      <!-- quantity -->
+                      <td>
+                        <input
+                          onchange="manageQuantityNotification(this); sumTotals()"
+                          id="item-quantity-1"
+                          value=""
+                          type="number"
+                          style="width: 3vw"
+                          class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light" 
+                          data-key="SHOWROOM QUANTITY"
+                          />
+                      </td>
+
+                      <!-- low qty notification -->
+                      <td>
+                        <span
+                          class="valign-text-middle notification-text-14px"
+                          id="quantity-notification-1"
+                          style="width: 20vw">
+                        </span>
+
+                      </td>
+                    </tr>
+
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="right-order-div">
+                <div class="form-header valign-text-middle lexenddeca-semi-bold-charade-m">SIDEMARK</div>
+
+                <textarea
+                  id="price-sidemark-1"
+                  class="item-textarea gothica1-light-charade-light"
+                  value=""
+                  data-key="SIDEMARK"
+                  ></textarea>
+
+              </div>
+            </div>
+
+            <!------------------------------------------------- STOCK AND LEAD TIME, CFA, and OTHER FEES  --------------------------------------------------->
+            <div class="order-section-div ">
+              <div class="middle-order-div">
+                <div class="form-header valign-text-middle lexenddeca-semi-bold-charade-m">STOCK & LEAD TIME</div>
+
+                <!-------------------------------------------- STOCK AND LEAD TIME --------------------------------------------------->
+
+                <table class="order-table">
+                  <tbody>
+
+                    <!-- row 1 -->
+                    <!-- status -->
+                    <tr class="item-group-standard">
+
+                      <!-- status label -->
+                      <td>
+                        <label
+                        for="status-stock-1"
+                        class="td-multi-item-label valign-text-middle gothica1-light-charade-14px">
+                        Status
+                        </label>
+                      </td>
+
+                      <!-- status -->
+                      <td>
+                        <select
+                        onchange="updateLeadTime(this)"
+                        class="middle-form-input gothica1-light-charade-light"
+                        style="width: 13.5vw"
+                        id="status-stock-1"
+                        data-key="STOCK STATUS"
+                        >
+                          <option value=""></option>
+                          <option value="IN STOCK - ON RESERVE">IN STOCK - ON RESERVE</option>
+                          <option value="IN STOCK">IN STOCK</option>
+                          <option value="PRINT TO ORDER">PRINT TO ORDER</option>
+                          <option value="NOT IN STOCK">NOT IN STOCK</option>
+                      </select>
+                      </td>
+
+                      <!--  "as of" label -->
+                      <td>
+                        <label
+                        style="width: 4vw"
+                        class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                        for="stock-status-as-of-1"
+                        >
+                        As of
+                        </label>
+                      </td>
+
+                      <!-- "as of" -->
+                      <td>
+                        <input
+                        style="width: 8vw; flex-direction: row;"
+                        type="date"
+                        id="stock-status-as-of-1"
+                        class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light"
+                        data-key="STOCK STATUS AS OF DATE"
+                        />
+                      </td>
+                    </tr>
+
+                    <!-- row 2 -->
+                    <!-- lead time -->
+                    <tr class="item-group-standard">
+
+                      <!-- lead time label -->
+                      <td>
+                        <label
+                        class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                        for="lead-time-1"
+                        >
+                        Lead Time
+                        </label>
+                      </td>
+
+                      <!-- lead time input -->
+                      <td>
+                        <input
+                        class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light"
+                        id="lead-time-1"
+                        data-key="LEAD TIME"
+                        />
+                      </td>
+
+                      <!-- lead time left disabled input -->
+                      <td>
+                        <input
+                        class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light user-no-edit"
+                        id="lead-time-left-1"
+                        disabled
+                        />
+                      </td>
+
+                      <!-- lead time right disabled input -->
+                      <td>
+                        <input
+                          style="width: 14vw;"
+                          class="td-multi-item-form-input valign-text-middle gothica1-light-charade-light user-no-edit"
+                          id="lead-time-right-1"
+                          disabled/>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <!------------------------------------------------- CFA --------------------------------------------------->
+                <div class="form-header valign-text-middle lexenddeca-semi-bold-charade-m ">CFA</div>
+
+                <table class="order-table-standard ">
+                  <tbody>
+
+                    <!-- row 1 -->
+                    <!-- cfa status -->
+                    <tr class="item-group-standard">
+
+                      <!-- cfa status label -->
+                      <td>
+                        <label class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                        for="cfa-status-stock-1" >
+                        Status
+                        </label>
+                      </td>
+
+                      <!-- cfa status select -->
+                      <td>
+                        <select
+                        onchange="cfaNotification(this)"
+                        class="middle-form-input gothica1-light-charade-light"
+                        style="width: 6vw"
+                        value=""
+                        id="cfa-status-stock-1"
+                        data-key="CFA/STRIKE-OFF STATUS"
+                        >
+                         <option value=""></option>
+                         <option value="N/A">N/A</option>
+                         <option value="WAIVED">WAIVED</option>
+                         <option value="REQUESTED">REQUESTED</option>
+                         <option value="SHIPPED">SHIPPED</option>
+                         <option value="APPROVED">APPROVED</option>
+                        </select>
+                      </td>
+
+                      <!-- date waived label -->
+                      <td>
+                        <label
+                        style="margin-left: 2vw;"
+                        class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                        for="cfa-date-waived-1"
+                        >
+                        Date Waived
+                        </label>
+                      </td>
+
+                      <!-- date waived input -->
+                      <td>
+                        <input
+                        type="date"
+                        id="cfa-date-waived-1"
+                        class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                        style="width: 8vw; display: flex; flex-direction: row"
+                        data-key="CFA/STRIKE-OFF WAIVED DATE"
+                        />
+                      </td>
+                    </tr>
+
+                    <!-- row 2 -->
+                    <!-- cfa carrier and date requested -->
+                    <tr class="item-group-standard">
+
+                      <!-- cfa carrier label -->
+                      <td>
+                        <label
+                        class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                        for="cfa-carrier-stock-1" >
+                        Carrier
+                        </label>
+                      </td>
+
+                      <!-- cfa carrier select -->
+                      <td>
+                        <select class="middle-form-input gothica1-light-charade-light"
+                        value=""
+                        id="cfa-carrier-stock-1"
+                        style="width: 8vw"
+                        data-key="CFA/STRIKE-OFF CARRIER"
+                        >
+                          <option value=""></option>
+                          <option value="USPS">USPS</option>
+                          <option value="FEDEX">FEDEX</option>
+                          <option value="UPS">UPS</option>
+                          <option value="DHL">DHL</option>
+                        </select>
+                      </td>
+
+                      <!--  date requested label -->
+                      <td>
+                        <label
+                        style="margin-left: 2vw;"
+                        class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                        for="cfa-date-requested-1">
+                        Date Requested
+                        </label>
+                      </td>
+
+                      <!-- date requested input -->
+                      <td>
+                        <input
+                        type="date"
+                        class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                        id="cfa-date-requested-1"
+                        style="width: 8vw; display: flex; flex-direction: row"
+                        data-key="CFA/STRIKE-OFF REQUESTED DATE"
+                        />
+                      </td>
+                    </tr>
+
+                    <!-- row 3 -->
+                    <!-- cfa tracking and date shipped -->
+                    <tr class="item-group-standard">
+
+                      <!-- cfa tracking label -->
+                      <td>
+                        <label
+                        class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                        for="cfa-tracking-1" >
+                        Tracking
+                        </label>
+                      </td>
+
+                      <!-- cfa tracking input -->
+                      <td>
+                        <input
+                        class="middle-form-input gothica1-light-charade-light"
+                        style="width: 10vw"
+                        id="cfa-tracking-1"
+                        data-key="CFA/STRIKE-OFF TRACKING"
+                        />
+                      </td>
+
+
+                      <!--  date shipped label -->
+                      <td>
+                        <label
+                        class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                        for="cfa-date-shipped-1"
+                        style="width: 6vw"
+                        >
+                        Date Shipped
+                        </label>
+                      </td>
+
+                      <!-- date shipped input -->
+                      <td>
+                        <input
+                        type="date"
+                        class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                        id="cfa-date-shipped-1"
+                        style="width: 6vw; display: flex; flex-direction: row"
+                        data-key="CFA/STRIKE-OFF SHIP DATE"
+                        />
+                      </td>
+                    </tr>
+
+                    <!-- row 4 -->
+                    <!-- cfa date approved -->
+                    <tr class="item-group-standard">
+
+                      <!-- cfa notification span -->
+                      <td>
+                        <span
+                        class="valign-text-middle notification-text-14px"
+                        id="cfa-notification-1"
+                        style="width: 17.5vw; text-align: end;">
+                        </span>
+                      </td>
+
+                      <!--  date approved label -->
+                      <td>
+                        <label class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                        for="cfa-date-approved-1"
+                        >
+                        Date Approved
+                        </label>
+                      </td>
+
+                      <!-- date approved input -->
+                      <td>
+                        <input
+                        type="date"
+                        class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                        id="cfa-date-approved-1"
+                        style="width: 6vw; display: flex; flex-direction: row"
+                        data-key="CFA/STRIKE-OFF APPROVED DATE"
+                        />
+                      </td>
+
+                    </tr>
+                  </tbody>
+                </table>
+
+                <hr class="item-hr">
+
+                <!------------------------------------------------- OTHER FEES --------------------------------------------------->
+                <div class="form-header valign-text-middle lexenddeca-semi-bold-charade-m ">
+                  OTHER FEES
+                </div>
+
+                <table class="order-table-standard ">
+                  <tbody>
+
+                    <!-- row 1 -->
+                    <!-- table subheaders client price, showroom cost -->
+                    <tr class="item-group-standard">
+                      <td>
+                        <span
+                        class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                        style="font-weight: 600">
+                        Client Price
+                        </span>
+                      </td>
+
+                      <td>
+                        <span
+                        class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                        style="font-weight: 600; margin-left: 7vw;">
+                        Showroom Cost
+                        </span>
+                      </td>
+                    </tr>
+
+                    <!-- row 2 -->
+                    <!-- cfa fee -->
+                    <tr class="item-group-standard">
+                      <td>
+                        <div style="" class="td-multi-item-div">
+
+                          <!-- client cfa fees -->
+                          <label class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                          for="client-cfa-fee-1" >
+                          CFA Fee
+                          </label>
+
+                          <input
+                          onchange="sumTotals()"
+                          class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                          style="width: 6vw"
+                          id="client-cfa-fee-1"
+                          type="number"
+                          min="0"
+                          data-key="CFA/STRIKE-OFF FEE (SHOWROOM CURRENCY)"
+                          />
+
+                          <!-- showroom cfa fees -->
+                          <label class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                          for="showroom-cfa-fee-1" >
+                          CFA Fee
+                          </label>
+
+                          <input
+                          onchange="sumTotals()"
+                          class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                          style="width: 6vw"
+                          id="showroom-cfa-fee-1"
+                          type="number"
+                          min="0"
+                          data-key="CFA/STRIKE-OFF FEE (VENDOR CURRENCY)"
+                          />
+                        </div>
+                      </td>
+                    </tr>
+
+                    <!-- row 3 -->
+                    <!-- setup fee -->
+                    <tr class="item-group-standard">
+                      <td>
+                        <div style="" class="td-multi-item-div">
+
+                          <!-- client setup fees -->
+                          <label class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                          for="client-setup-fee-1" >
+                          Setup Fee
+                          </label>
+
+                          <input
+                          onchange="sumTotals()"
+                          class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                          style="width: 6vw"
+                          id="client-setup-fee-1"
+                          type="number"
+                          min="0"
+                          data-key="SETUP FEE (SHOWROOM CURRENCY)"
+                          />
+
+                          <!-- showroom cfa fees -->
+                          <label class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                          for="showroom-setup-fee-1" >
+                          Setup Fee
+                          </label>
+
+                          <input
+                          onchange="sumTotals()"
+                          class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                          style="width: 6vw"
+                          id="showroom-setup-fee-1"
+                          type="number"
+                          min="0"
+                          data-key="SETUP FEE (VENDOR CURRENCY)"
+                          />
+                        </div>
+                      </td>
+                    </tr>
+
+                    <!-- row 4 -->
+                    <!-- rush fee -->
+                    <tr class="item-group-standard">
+                      <td>
+                        <div class="td-multi-item-div">
+
+                          <!-- client rush fees -->
+                          <label class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                          for="client-rush-fee-1" >
+                          Rush Fee
+                          </label>
+
+                          <input
+                          onchange="sumTotals()"
+                          class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                          style="width: 6vw"
+                          id="client-rush-fee-1"
+                          type="number"
+                          min="0"
+                          data-key="RUSH FEE (SHOWROOM CURRENCY)"
+                          />
+
+                          <!-- showroom cfa fees -->
+                          <label class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                          for="showroom-rush-fee-1" >
+                          Rush Fee
+                          </label>
+
+                          <input
+                          onchange="sumTotals()"
+                          class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                          style="width: 6vw"
+                          id="showroom-rush-fee-1"
+                          type="number"
+                          min="0"
+                          data-key="RUSH FEE (VENDOR CURRENCY)"
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <!-- <hr class="item-hr" /> -->
+
+              </div>
+
+              <!-- --------------------------------------- NOTES SECTION ----------------------------------------------------------- -->
+              <div class="right-order-div">
+                <div class="form-header valign-text-middle lexenddeca-semi-bold-charade-m">NOTES</div>
+
+                <!-- general notes -->
+                <div class="valign-text-middle gothica1-light-charade-14px">Notes to Consider</div>
+
+                <textarea
+                  id="consider-notes-1"
+                  class="item-textarea gothica1-light-charade-light"
+                  value=""
+                  data-key="NOTES TO CONSIDER"
+                ></textarea>
+
+                <!-- client notes -->
+                <div class="valign-text-middle gothica1-light-charade-14px">Client Notes</div>
+
+                <textarea
+                id="client-notes-1"
+                class="item-textarea gothica1-light-charade-light"
+                value=""
+                data-key="NOTES FOR CLIENT"
+                ></textarea>
+
+                <!-- vendor notes -->
+                <div class="valign-text-middle gothica1-light-charade-14px">Vendor Notes</div>
+
+                <textarea
+                id="vendor-notes-1"
+                class="item-textarea gothica1-light-charade-light"
+                value=""
+                data-key="NOTES FOR VENDOR"
+                ></textarea>
+
+                <!-- internal notes -->
+                <div class="valign-text-middle gothica1-light-charade-14px">Internal Notes</div>
+
+                <textarea
+                id="internal-notes-1"
+                class="item-textarea gothica1-light-charade-light"
+                value=""
+                data-key="INTERNAL NOTES"
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="full-divider">
+              <div>
+                <hr class="item-hr">
+              </div>
+              <div>
+                <hr class="item-hr-right">
+              </div>
+            </div>
+          </div>
+
+
+          <!------------------------------------------------- FREIGHT --------------------------------------------------->
+          <div class="order-section-div">
+            <div class="middle-order-div">
+              <div id="freight-section" class="form-header valign-text-middle lexenddeca-semi-bold-charade-m">
+                FREIGHT
+              </div>
+
+              <table class="order-table-standard">
+                <tbody>
+
+                  <!-- row 1 -->
+                  <!-- table sub-headers client price, showroom cost -->
+                  <tr class="item-group-standard">
+                    <td>
+                      <span
+                      class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                      style="font-weight: 600">
+                      Client Price
+                      </span>
+                    </td>
+
+                    <td>
+                      <span
+                      class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                      style="font-weight: 600; margin-left: 7vw;">
+                      Showroom Cost
+                      </span>
+                    </td>
+                  </tr>
+
+                  <!-- freight packing fee -->
+                  <tr class="item-group-standard">
+
+                    <!-- client price packing fee -->
+                    <td>
+                      <label
+                      class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                      for="client-price-packing-fee" >
+                      Packing Fee
+                      </label>
+                    </td>
+
+                    <!-- client price packing fee input -->
+                    <td>
+                      <input
+                      onchange="sumTotals()"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                      style="width: 6vw"
+                      id="client-price-packing-fee"
+                      type="number"
+                      min="0"
+                      data-key="PACKING FEE (SHOWROOM CURRENCY)"
+                      />
+                    </td>
+
+                    <!-- showroom cost packing fee -->
+                    <td>
+                      <label
+                      class="item-label-standard valign-text-middle gothica1-light-charade-light"
+                      for="showroom-cost-packing-fee" >
+                      Packing Fee
+                      </label>
+                    </td>
+
+                    <!-- showroom cost packing fee input -->
+                    <td>
+                      <input
+                      onchange="sumTotals()"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                      style="width: 6vw"
+                      id="showroom-cost-packing-fee"
+                      type="number"
+                      min="0"
+                      data-key="PACKING FEE (VENDOR CURRENCY)"
+                      />
+                    </td>
+                  </tr>
+
+                  <!-- int'l fee -->
+                  <tr class="item-group-standard">
+
+                    <!-- client price int'l fee label -->
+                    <td>
+                      <label class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                      for="client-price-international-fee" >
+                      International Fee
+                      </label>
+                    </td>
+
+                    <!-- client price int'l fee input -->
+                    <td>
+                      <input
+                      onchange="sumTotals()"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                      style="width: 6vw"
+                      id="client-price-international-fee"
+                      type="number"
+                      min="0"
+                      data-key="INTERNATIONAL FEE (SHOWROOM CURRENCY)"
+                      />
+                    </td>
+
+                    <!-- showroom cost int'l fee label -->
+                    <td>
+                      <label
+                      class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                      for="showroom-cost-international-fee" >
+                      International Fee
+                      </label>
+                    </td>
+
+                    <!-- showroom cost int'l fee input -->
+                    <td>
+                      <input
+                      onchange="sumTotals()"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                      style="width: 6vw"
+                      id="showroom-cost-international-fee"
+                      type="number"
+                      min="0"
+                      data-key="INTERNATIONAL FEE (VENDOR CURRENCY)"
+                      />
+                    </td>
+                  </tr>
+
+                  <!-- freight fee -->
+                  <tr class="item-group-standard">
+
+                    <!-- client price freight fee label -->
+                    <td>
+                      <label
+                      class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                      for="client-price-freight-fee" >
+                      Freight Fee
+                      </label>
+                    </td>
+
+                    <!-- client price freight fee input -->
+                    <td>
+                      <input
+                      onchange="sumTotals()"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                      style="width: 6vw"
+                      id="client-price-freight-fee"
+                      type="number"
+                      min="0"
+                      data-key="FREIGHT (SHOWROOM CURRENCY)"
+                      />
+                    </td>
+
+                    <!-- showroom cost freight fee label -->
+                    <td>
+                      <label
+                      class="item-label-standard valign-text-middle gothica1-light-charade-14px"
+                      for="showroom-cost-freight-fee" >
+                      Freight Fee
+                      </label>
+                    </td>
+
+                    <!-- showroom cost freight fee input -->
+                    <td>
+                      <input
+                      onchange="sumTotals()"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                      style="width: 6vw"
+                      id="showroom-cost-freight-fee"
+                      type="number"
+                      min="0"
+                      data-key="FREIGHT (VENDOR CURRENCY)"
+                      />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <hr class="item-hr" />
+            </div>
+          </div>
+
+          <!------------------------------------------------- TRACKING --------------------------------------------------->
+          <div id="tracking-section" class="form-header valign-text-middle lexenddeca-semi-bold-charade-m">
+            TRACKING
+          </div>
+
+          <!-- container for duplicating/ or adding tracking -->
+          <div id="tracking-group-container-1">
+            <table class="order-table-standard">
+              <tbody>
+
+                <!-- row 1 -->
+                <!-- tracking date, carrier, service -->
+                <tr class="item-group-standard">
+
+                  <!--tracking  date label -->
+                  <td>
+                    <label
+                    class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                    for="tracking-date-1"
+                    >
+                    Date
+                    </label>
+                  </td>
+
+                  <!-- tracking date input -->
+                  <td>
+                    <input
+                    type="date"
+                    value=""
+                    class="middle-form-input  gothica1-light-charade-light"
+                    style="width: 6vw"
+                    id="tracking-date-1"
+                    data-key="TRACKING DATE # 1"
+                    />
+                  </td>
+
+                  <!-- tracking carrier label -->
+                  <td>
+                    <label
+                    class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                    for="tracking-carrier-1"
+                    style="width: 5vw">
+                    Carrier
+                    </label>
+                  </td>
+
+                  <!-- tracking carrier select -->
+                  <td>
+                    <select class="middle-form-input  gothica1-light-charade-light"
+                    style="width: 4vw"
+                    id="tracking-carrier-1"
+                    value=""
+                    data-key="TRACKING CARRIER # 1"
+                    >
+                      <option value=""></option>
+                      <option value="USPS">USPS</option>
+                      <option value="FEDEX">FEDEX</option>
+                      <option value="UPS">UPS</option>
+                      <option value="DHL">DHL</option>
+                    </select>
+                  </td>
+
+                  <!-- tracking service label -->
+                  <td>
+                    <label
+                    class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                    for="tracking-service-1"
+                    style="width: 5vw"
+                    >
+                    Service
+                    </label>
+                  </td>
+
+                  <!-- tracking service select -->
+                  <td>
+                    <select
+                    class="middle-form-input  gothica1-light-charade-light"
+                    style="width: 8vw"
+                    id="tracking-service-1"
+                    value=""
+                    data-key="TRACKING SERVICE # 1"
+                    >
+                     <option value=""></option>
+                     <option value="OVERNIGHT">OVERNIGHT</option>
+                     <option value="PRIORITY">PRIORITY</option>
+                     <option value="2-DAY">2-DAY</option>
+                     <option value="3-DAY">3-DAY</option>
+                     <option value="GROUND">GROUND</option>
+                     <option value="INTERNATIONAL">INTERNATIONAL</option>
+                  </select>
+                  </td>
+
+                </tr>
+
+                <!-- row 2 -->
+                <!-- tracking number -->
+                <tr class="item-group-standard">
+
+                  <!-- tracking number label -->
+                  <td>
+                    <label
+                    class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                    for="tracking-number-1">
+                    Tracking
+                    </label>
+                  </td>
+
+                  <!-- tracking number input -->
+                  <td>
+                    <input
+                    value=""
+                    class="middle-form-input  gothica1-light-charade-light"
+                    style="width: 10vw"
+                    id="tracking-number-1"
+                    data-key="TRACKING # 1"
+                    />
+                  </td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+
+          <!-- table container for the clickable for adding tracking number -->
+          <table class="order-table-standard">
+            <tbody>
+
+              <tr class="item-group-standard">
+                <td>
+                  <span
+                    onclick="createNewTracking()"
+                    style="margin-left: 4vw; cursor: pointer;"
+                    class="valign-text-middle gothica1-light-charade-14px">
+                      + Add another tracking number
+                  </span>
+                </td>
+              </tr>
+
+            </tbody>
+          </table>
+
+          <div class="full-divider">
+            <div>
+              <hr class="item-hr">
+            </div>
+            <div>
+              <hr class="item-hr-right">
+            </div>
+          </div>
+
+          <!------------------------------------------------- PAYMENTS --------------------------------------------------->
+          <div class="order-section-div">
+            <div class="middle-order-div">
+              <div id="payments-section" class="form-header valign-text-middle lexenddeca-semi-bold-charade-m">
+                PAYMENTS
+              </div>
+
+              <table class="order-table">
+                <tbody>
+                  <tr class="item-group-standard">
+                    <td>
+                      <div class="td-multi-item-div">
+                        <!-- payment date -->
+                        <label 
+                        class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                        for="payment-date-1">
+                        Payment Date
+                        </label>
+
+                        <input
+                        class="middle-form-input  gothica1-light-charade-light"
+                        style="width: 6vw"
+                        id="payment-date-1"
+                        type="date"
+                        data-key="INITIAL PAYMENT DATE"
+                        />
+
+                        <!-- payment method -->
+                        <label 
+                        class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                        for="payment-method-1">
+                        Payment Method
+                        </label>
+
+                        <select 
+                        class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                        style="width: 6vw"
+                        id="payment-method-1"
+                        data-key="INITIAL PAYMENT METHOD"
+                        >
+                          <option value=""></option>
+                        </select>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr class="item-group-standard">
+                    <td>
+                      <div class="td-multi-item-div">
+
+                        <label class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                        for="reference-number-1">
+                        Reference Number
+                        </label>
+
+                        <input
+                        class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                        style="width: 6vw"
+                        id="reference-number-1"
+                        type="text"
+                        data-key="INITIAL PAYMENT REFERENCE #"
+                        />
+
+                        <label 
+                        class="td-multi-item-label valign-text-middle gothica1-light-charade-14px"
+                        for="payment-amount-1">
+                        Payment Amount
+                        </label>
+
+                        <input
+                        onchange="sumTotals();"
+                        class="middle-form-input valign-text-middle gothica1-light-charade-light"
+                        style="width: 6vw"
+                        id="payment-amount-1"
+                        type="number"
+                        data-key="INITIAL PAYMENT AMOUNT"
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+
+              </table>
+            </div>
+
+            <div class="right-order-div" style="margin-bottom: 10vw">
+              <div id="payments-section" class="form-header valign-text-middle lexenddeca-semi-bold-charade-m">
+                ACCOUNTING
+              </div>
+
+              <table class="order-table">
+                <tbody>
+
+                  <!-- subtotal -->
+                  <tr class="item-group-standard">
+                    <td>
+                      <label for="subtotal" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Subtotal</label>
+                    </td>
+
+                    <td>
+                      <input 
+                      disabled 
+                      value="" 
+                      id="subtotal" 
+                      class="right-form-input gothica1-light-charade-light user-no-edit" 
+                      data-key="SUBTOTAL (SHOWROOM CURRENCY)"
+                      />
+                    </td>
+                  </tr>
+
+                  <!-- cut fees -->
+                  <tr class="item-group-standard">
+                    <td>
+                      <label for="cut-fees" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Cut Fees</label>
+                    </td>
+
+                    <td>
+                      <input 
+                      disabled
+                      value="" 
+                      id="cut-fees" 
+                      class="right-form-input gothica1-light-charade-light user-no-edit" 
+                      data-key="CUT FEE (SHOWROOM CURRENCY)"
+                      />
+                    </td>
+                  </tr>
+
+                  <!-- other fees -->
+                  <tr class="item-group-standard">
+                    <td>
+                      <label for="other-fees" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Other Fees</label>
+                    </td>
+
+                    <td>
+                      <!-- add javascript to total up everything in the form -->
+                      <input 
+                      disabled 
+                      value="" 
+                      id="other-fees"  
+                      class="right-form-input gothica1-light-charade-light user-no-edit user-no-edit"
+                      data-key="OTHER FEES TOTAL (SHOWROOM CURRENCY)"
+                       />
+                    </td>
+                  </tr>
+
+                  <!-- freight total -->
+                  <tr class="item-group-standard">
+                    <td>
+                      <label for="freight-total" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Freight</label>
+                    </td>
+
+                    <td>
+                      <input 
+                      disabled 
+                      value="" 
+                      id="freight-total"  
+                      class="right-form-input gothica1-light-charade-light user-no-edit" 
+                      data-key="FREIGHT TOTAL (SHOWROOM CURRENCY)"
+                      />
+                    </td>
+                  </tr>
+
+                  <!-- sales tax -->
+                  <tr class="item-group-standard">
+                    <td>
+                      <label for="total-sales-tax" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Sales Tax</label>
+                    </td>
+
+                    <td>
+                      <input 
+                      disabled 
+                      value="" 
+                      id="total-sales-tax"  
+                      class="right-form-input gothica1-light-charade-light user-no-edit" 
+                      data-key="SALES TAX"
+                      />
+                    </td>
+                  </tr>
+
+                  <!-- total -->
+                  <tr class="item-group-standard">
+                    <td>
+                      <label for="order-total" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Total</label>
+                    </td>
+
+                    <td>
+                      <input 
+                      disabled 
+                      value="" 
+                      id="order-total"  
+                      class="right-form-input gothica1-light-charade-light user-no-edit" 
+                      data-key="TOTAL"
+                      />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <hr class="item-hr-right" />
+
+              <table class="order-table">
+                <tbody>
+                  <tr class="item-group-standard">
+                    <td>
+                      <label for="payments-list" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Payments</label>
+                    </td>
+
+                    <td>
+                      <input 
+                      disabled 
+                      value="" 
+                      id="payments-list" 
+                      class="right-form-input gothica1-light-charade-light user-no-edit" 
+                      data-key="PAYMENT TOTAL"
+                      />
+                    </td>
+                  </tr>
+
+                  <tr class="item-group-standard">
+                    <td>
+                      <label for="balance-due" class="item-label-standard valign-text-middle gothica1-light-charade-14px">Balance Due</label>
+                    </td>
+
+                    <td>
+                      <input 
+                      disabled 
+                      value="" 
+                      id="balance-due"  
+                      class="right-form-input gothica1-light-charade-light user-no-edit" 
+                      data-key="BALANCE DUE"
+                      />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+
+            </div>
+
+
+          </div>
+
+        </form>
+
+      </div>
+
+
+    </div>
+
+  </div>
+</div>

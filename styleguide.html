@@ -1,0 +1,171 @@
+<style>
+  :root {
+    --black: #000000;
+    --bon-jour: #e2e2e2;
+    --charade: #2a2d33;
+    --licorice: #170d0d;
+    --white: #ffffff;
+    --woodsmoke: #111010;
+
+    --font-size-l: 16px;
+    --font-size-m: 14px;
+    --font-size-s: 11px;
+    --font-size-xs: 9px;
+    --font-size-xl: 18px;
+
+    --font-family-gothic_a1: "Gothic A1", Helvetica;
+    --font-family-lexend_deca: "Lexend Deca", Helvetica;
+    --font-family-gothic_a1-bold: "Gothic A1-Bold", Helvetica;
+    --font-family-lexend_deca-semibold: "Lexend Deca-SemiBold", Helvetica;
+  }
+
+  .gothica1-light-charade-light {
+    color: var(--charade);
+    font-family: var(--font-family-gothic_a1);
+    font-size: var(--font-size-m);
+    font-style: normal;
+    font-weight: 200;
+  }
+
+  .gothica1-light-charade-14px {
+    color: var(--charade);
+    font-family: var(--font-family-gothic_a1);
+    font-size: var(--font-size-m);
+    font-style: normal;
+    font-weight: 300;
+  }
+
+  .notification-text-14px {
+    color: var(--black);
+    font-family: var(--font-family-gothic_a1);
+    font-size: var(--font-size-s);
+    font-style: normal;
+    font-weight: 800;
+  }
+
+  .gothica1-light-woodsmoke-16px {
+    color: var(--woodsmoke);
+    font-family: var(--font-family-gothic_a1);
+    font-size: var(--font-size-l);
+    font-style: normal;
+    font-weight: 300;
+  }
+
+  .gothica1-normal-charade-16px {
+    color: var(--charade);
+    font-family: var(--font-family-gothic_a1);
+    font-size: var(--font-size-l);
+    font-style: normal;
+    /* font-weight: 400; */
+  }
+
+  .gothica1-normal-charade-18px {
+    color: var(--charade);
+    font-family: var(--font-family-gothic_a1);
+    font-size: var(--font-size-xl);
+    font-style: normal;
+    font-weight: 400;
+  }
+
+  .lexenddeca-semi-bold-charade-m {
+    color: var(--charade);
+    font-family: var(--font-family-lexend_deca);
+    font-size: var(--font-size-m);
+    font-style: normal;
+    font-weight: 600;
+  }
+
+  .lexenddeca-medium-black-18px {
+    color: var(--black);
+    font-family: var(--font-family-lexend_deca);
+    font-size: var(--font-size-xl);
+    font-style: normal;
+    font-weight: 500;
+  }
+
+  .lexenddeca-medium-white-11px {
+    color: var(--white);
+    font-family: var(--font-family-lexend_deca);
+    font-size: var(--font-size-s);
+    font-style: normal;
+    font-weight: 500;
+  }
+
+  .gothica1-light-licorice-16px {
+    color: var(--licorice);
+    font-family: var(--font-family-gothic_a1);
+    font-size: var(--font-size-l);
+    font-style: normal;
+    font-weight: 300;
+  }
+
+  .gothica1-light-woodsmoke-16px {
+    color: var(--woodsmoke);
+    font-family: var(--font-family-gothic_a1);
+    font-size: var(--font-size-l);
+    font-style: normal;
+    font-weight: 300;
+  }
+
+  .lexenddeca-medium-black-18px {
+    color: var(--black);
+    font-family: var(--font-family-lexend_deca);
+    font-size: var(--font-size-xl);
+    font-style: normal;
+    font-weight: 500;
+  }
+
+  .lexenddeca-medium-white-11px {
+    color: var(--white);
+    font-family: var(--font-family-lexend_deca);
+    font-size: var(--font-size-xs);
+    font-style: normal;
+    font-weight: 500;
+  }
+
+  .gothica1-light-licorice-16px {
+    color: var(--licorice);
+    font-family: var(--font-family-gothic_a1);
+    font-size: var(--font-size-l);
+    font-style: normal;
+    font-weight: 300;
+  }
+
+  .grid-view {
+    display: table;
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+
+  .grid-header,
+  .grid-row {
+    display: table-row;
+  }
+
+  .header-item,
+  .row-item {
+    display: table-cell;
+    padding: 10px;
+    border: 1px solid var(--bon-jour);
+    font-family: var(--font-family-gothic_a1);
+    font-size: var(--font-size-m);
+    background-color: var(--white);
+    color: var(--woodsmoke);
+  }
+
+  .grid-header .header-item {
+    background-color: var(--charade);
+    color: var(--white);
+    font-weight: 600;
+  }
+
+  .grid-row:nth-child(even) .row-item {
+    background-color: var(--bon-jour);
+  }
+
+  .grid-row:hover .row-item {
+    background-color: var(--licorice);
+    color: var(--white);
+  }
+</style>

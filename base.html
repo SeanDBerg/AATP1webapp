@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <?!= include('styleguide.html'); ?>
+  <?!= include('css.html'); ?>
+  <?!= include('modal-css') ?>
+  <?!= include('toggle-css') ?>
+  <?!= include('rolling-number-css') ?>
+  <?!= include('globals.html'); ?>
+</head>
+
+
+<body style="margin: 0; background: #ffffff;">
+
+
+  <!-- CARPET SAMPLE MODAL -->
+  <div id="myModal" class="modal"> 
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <p class="valign-text-middle gothica1-light-charade-14px modal-prompt-p" id="modal-prompt">
+        Enter something:
+      </p>
+
+      <!-- loading icon -->
+      <div id="loadingIcon" style="display: none;">
+        <img src="https://media.tenor.com/YtAOA9y7VG0AAAAM/loading.gif" width="20px" alt="Loading..." />
+      </div>
+
+      <input class="modal-input gothica1-light-charade-light" type="text" id="modalInput">
+      <button class="copy-button" id="confirmButton">Confirm</button>
+    </div>
+  </div>
+  <!-- END OF MODAL -->
+
+
+
+  <header id="header" class="header">
+    <div class="flex-row">
+      <img
+        class="logo-image"
+        src="https://anima-uploads.s3.amazonaws.com/projects/6488afc9c8dc5e7ec62c74e3/releases/6488b0e2a431e2ec8d72c9d5/img/logo-image@2x.png"
+        alt="Logo Image"
+        />
+
+
+
+      <!-- ITEM LOOKUP -->
+      <div class="navbar gothica1-light-woodsmoke-16px">
+        <div onclick="navigation('home-directory')" class="navbar-link valign-text-middle">Portal Home</div>
+        <div onclick="navigation('item-lookup-page')" class="navbar-link valign-text-middle">Price and Cost Portal</div>
+        
+        <!-- ORDER ENTRY -->
+        <!-- pause production here for now until "item-lookup-page" is configured and deployed -->
+        <!-- <div onclick="navigation('orderpage')" class="navbar-link valign-text-middle">Order Entry</div> -->
+
+        <!-- RUG PRODUCT ENTRY -->
+        <!-- <div onclick="navigation('rug-product-entry')" class="navbar-link valign-text-middle">Rug Product Entry</div> -->
+
+        <!-- CARPET SAMPLE ENTRY -->
+        <!-- this needs to be edited to show a dropdown menu... to be able to choose check in or out -->
+        <div onclick="navigation('carpet-sample-page')" class="navbar-link valign-text-middle">Carpet Sample Check Out</div>
+      </div>
+
+      <div style="margin-right: 3.2vw;" class="login-info-item valign-text-middle gothica1-light-woodsmoke-16px">
+        <?= userName ?>
+      </div>
+    </div>
+
+    <div class="header-group">
+      <div class="header-subgroup lexenddeca-medium-black-18px">
+        <div id="page-subtitle" class="quoteorder-entry valign-text-middle">
+          <?= pageSubtitle ?>
+        </div>
+
+        <!-- put buttons here that are hidden, to be displayed later -->
+        <div id="order-buttons-group" style="display: none" class="order-buttons-group gothica1-normal-charade-16px">
+          <!-- order page buttons -->
+          <button onclick="submitForm()" class="order-button">SAVE</button>
+          <button class="order-button">EMAIL</button>
+          <button onclick="clearForm()" class="order-button">CLEAR</button>
+        </div>
+
+        <!-- carpet sample check out buttons -->
+        <div id="carpet-sample-buttons-group" style="display: none"
+          class="order-buttons-group gothica1-normal-charade-16px">
+          <button onclick="submitCarpetSampleForm()" class="order-button" id="carpet-sample-form-submit">SUBMIT</button>
+        </div>
+
+        <!-- rug product entry buttons -->
+        <div id="rug-product-entry-buttons-group" style="display: none;" class="rug-order-buttons-group gothica1-normal-charade-16px">
+          <div id="toggle-loading-icon" class="visually-hidden">
+            <img src="https://media.tenor.com/YtAOA9y7VG0AAAAM/loading.gif" width="20px" alt="Loading..." />
+          </div>
+
+          <div id="rug-toggle">
+            <input type="radio" name="rug-mode-toggle" id="clone-radio" value="clone" class="toggle-radio rug-header-button" disabled>
+            <input type="radio" name="rug-mode-toggle" id="create-radio" value="create" class="toggle-radio rug-header-button" disabled>
+            <input type="radio" name="rug-mode-toggle" id="edit-radio" value="edit" class="toggle-radio rug-header-button" disabled>
+            <div class="toggle-container">
+              <label for="clone-radio" class="clone-mode">CLONE</label>
+              <label for="create-radio" class="create-mode">CREATE</label>
+              <label for="edit-radio" class="edit-mode">EDIT</label>
+            </div>
+          </div>
+
+          <button type="button" class="order-button save-btn rug-header-button" disabled>SAVE</button>
+          <button type="button" class="order-button clear-btn rug-header-button" disabled>CLEAR</button>
+
+        </div>
+
+        <div id="payment-link-submit-buttons-group" style="display: none;" class="rug-order-buttons-group gothica1-normal-charade-16px">
+          <img class="visually-hidden" id="clear-button-loading-icon" src="https://media.tenor.com/YtAOA9y7VG0AAAAM/loading.gif" width="20px" alt="Loading..." />
+          <button id="payment-link-clear-button" type="button" class="payment-link-button clear-btn rug-header-button" disabled>CLEAR</button>
+        </div>
+      </div>
+    </div>
+
+  </header>
+
+  <div id="content">
+    <?!= bodyFill ?>
+  </div>
+
+</body>
+<?!= include('js-globals') ?>
+<?!= include('js') ?>
+<?!= include('item-lookup-page-js') ?>
+<?!= include('carpet-sample-page-js') ?>
+<?!= include('carpet-sample-page-check-in-js') ?>
+<?!= include('client-interactions-js') ?>
+<?!= include('modal-js') ?>
+<?!= include('looker-studio-reports-js') ?>
+<?!= include('rug-product-entry-js') ?>
+<?!= include('payment-link-generator-js') ?>
+</html>

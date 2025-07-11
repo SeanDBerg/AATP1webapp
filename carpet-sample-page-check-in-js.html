@@ -1,0 +1,331 @@
+<script>
+  /**************************************************** SUBMIT CHECK IN **************************************************/
+  function submitCarpetSampleCheckIn(orderNumber) {
+    //this is the check in system
+
+    const carpetSampleForm = document.getElementById("carpet-sample-form");
+    const deliveryMethodElem = document.getElementById("delivery-method");
+    const deliveryMethod = deliveryMethodElem.value;
+    const includeDeliveryInfo = deliveryMethod == "Shipped";
+    const checkInValueElements = carpetSampleForm.getElementsByClassName("check-in-value");
+    const emailContentElements = carpetSampleForm.getElementsByClassName("email-content");
+    const submitBtn = document.getElementById("carpet-sample-form-submit");
+    const formData = {};
+    const emailContentOb = {};
+
+    console.log({ emailContentElements })
+
+    for (let e = 0; e < checkInValueElements.length; e++) {
+      let elem = checkInValueElements[e];
+      let logId = elem.getAttribute("data-log-id");
+      let value = elem.value;
+
+      formData[logId] = { value };
+    };
+
+    for (let e = 0; e < emailContentElements.length; e++) {
+      let elem = emailContentElements[e];
+      let key = elem.getAttribute("data-key");
+      let logId = elem.getAttribute("data-log-id");
+      let value = "";
+
+      console.log({ key, value, logId });
+
+      if (elem.tagName === "INPUT" || elem.tagName === "SELECT") {
+        value = elem.value;
+      } else {
+        value = elem.textContent.trim();
+      };
+
+      // here, skip adding the delivery information to the form data if these conditions are met
+
+      // if (
+      //   key.indexOf("DELIVERY") > -1 &&
+      //   key != "DELIVERY METHOD" &&
+      //   deliveryMethod != "Shipped"
+      // ) continue;
+
+      if (key == "ORDER STATUS" && (value == "Delivery Method" || value == "")) value = "None";
+
+      emailContentOb[key] = { value, id: elem.id, logId };
+    };
+
+    const amountItems = Object.keys(emailContentOb).filter(f => f.indexOf("MILL NAME-") > -1).length;
+    const { userName, userEmail } = destinationsObject.globals.user;
+
+    emailContentOb["SUBMITTED BY"] = { value: `${userName} - ${userEmail}`, id: "" };
+
+    console.log(emailContentOb);
+    console.log({ amountItems });
+    emailContentOb["amountItems"] = { value: amountItems, id: "" };
+
+    submitBtn.innerHTML = "SUBMITTING...";
+
+    google.script.run.withSuccessHandler(response => {
+      console.log("CHECK IN COMPLETE");
+      //refresh the page with the new values
+      // configureCarpetSampleCheckInPage("carpet-sample-page-check-in", orderNumber);
+
+      submitBtn.innerHTML = "SUBMITTED";
+
+      setTimeout(() => {
+        submitBtn.innerHTML = "SUBMIT"
+      }, 2000);
+
+      //send user back to home screen
+      navigation("home-directory");
+
+    }).submitCarpetSampleCheckIn(formData, orderNumber, emailContentOb);
+
+
+  }
+
+
+
+
+
+
+
+
+
+
+  /**************************************************** CONFIGURE CHECK IN PAGE **************************************************/
+  function configureCarpetSampleCheckInPage(destination, orderNumber) {
+    /**
+     *  - load the clients into the drop down
+     *  - what else?
+     */
+
+    const clientInputElem = document.getElementById("name");
+    const contactNameElem = document.getElementById("contact-name");
+    const contactEmailElem = document.getElementById("contact-email");
+    const deliveryMethodSelectElem = document.getElementById("delivery-method");
+    const itemTableElem = document.getElementById("carpet-sample-table-1");
+    const itemTableBodyElem = itemTableElem.querySelector("tbody");
+    const subtitleElem = document.getElementById("page-subtitle");
+    const buttonsDiv = document.getElementById("carpet-sample-buttons-group");
+    const submitButton = buttonsDiv.querySelector("#carpet-sample-form-submit");
+
+    console.log({ submitButton, onclick: submitButton.onclick })
+
+    subtitleElem.innerHTML = `${subtitleElem.innerHTML} - ${orderNumber}`;
+    buttonsDiv.style.display = "flex";
+    submitButton.onclick = () => { submitCarpetSampleCheckIn(orderNumber) };
+
+    google.script.run.withSuccessHandler(response => {
+      //in succession, load up the drop down menus on the page top to bottom
+      const { carpetSampleTransactions } = JSON.parse(response);
+      const primaryItem = carpetSampleTransactions[orderNumber][0];
+
+      clientInputElem.value = primaryItem["CLIENT NAME"];
+      contactNameElem.value = primaryItem["CLIENT CONTACT NAME"];
+      contactEmailElem.value = primaryItem["CLIENT CONTACT EMAIL"];
+
+      //set delivery method/order status
+      const deliveryMethod = primaryItem["ORDER STATUS"];
+
+      for (let i = 0; i < deliveryMethodSelectElem.options.length; i++) {
+        if (deliveryMethodSelectElem.options[i].value.toString().toLowerCase() === deliveryMethod.toString().toLowerCase()) {
+          deliveryMethodSelectElem.selectedIndex = i;
+          break;
+        }
+      };
+
+      deliveryMethodCarpetSampleOnChange(deliveryMethodSelectElem);
+
+      if (deliveryMethod.toString().toLowerCase() == "shipped") {
+        const deliverToOb = {
+          "deliver-to-name": "DELIVER TO NAME",
+          "deliver-to-address-street": "DELIVER TO STREET ADDRESS",
+          "deliver-to-address-city": "DELIVER TO CITY",
+          "deliver-to-address-state": "DELIVER TO STATE",
+          "deliver-to-address-zip": "DELIVER TO ZIP",
+          "deliver-to-contact-name": "DELIVER TO CONTACT NAME",
+        };
+
+        for (let d in deliverToOb) document.getElementById(d).value = primaryItem[deliverToOb[d]];
+      }
+      //end setting of delivery method/order status
+
+      var itemsContent = "";
+      var itemNumber = 1;
+
+      for (let itemIndex in carpetSampleTransactions[orderNumber]) {
+        let item = carpetSampleTransactions[orderNumber][itemIndex];
+        let itemTemplate = carpetSampleCheckInItemSectionTemplate;
+
+        if (item["CHECK STATUS"] == "checked out") item["CHECK DATE"] = "";
+
+        for (let key in item) itemTemplate = itemTemplate.replace(new RegExp(`\\$\\[${key}\\]`, "g"), item[key]);
+
+        itemTemplate = itemTemplate.replace(new RegExp(`\\$\\[itemNumber\\]`, "g"), itemNumber);
+
+        if (item["CHECK STATUS"] == "checked in") {
+          itemTemplate = itemTemplate.replace(new RegExp(`\\$\\[tStyle\\]`, "g"), "color: #b6b5b5;");
+          itemTemplate = itemTemplate.replace(new RegExp(`\\$\\[additionalAttributes\\]`, "g"), "disabled");
+        }
+
+        itemsContent += "\n\n" + itemTemplate;
+        itemNumber++;
+      }
+
+      itemTableBodyElem.innerHTML = itemsContent;
+
+    }).loadPage(["carpetSampleTransactions"]);
+
+  };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  /**************************************************** TEMPLATE FOR ITEMS **************************************************/
+  const carpetSampleCheckInItemSectionTemplate = `                
+                <tr style="display: block; margin-top: 3vw;">
+                  <th 
+                    id="table-header-1" 
+                    style="display: flex; font-weight: 600; width: 100%; gap: 6vw; $[tStyle]"
+                    class="item-label-standard gothica1-light-charade-14px table-header"
+                    data-key="ITEM $[itemNumber]">
+
+                    ITEM $[itemNumber]
+                    <input 
+                    $[additionalAttributes]
+                    value="$[CHECK DATE]"
+                    class="right-form-input gothica1-light-charade-light check-in-value"
+                    id="check-in-date-$[itemNumber]"
+                    style="display: flex; align-items: center; $[tStyle]"
+                    type="date"
+                    data-log-id="$[LOG ID]" 
+                     />
+
+                    </th>
+                </tr>
+
+                <!-- row 1 -->
+                <!-- mill -->
+                <tr class="item-group-standard" style="">
+
+                  <!-- mill label -->
+                  <td>
+                    <label style="$[tStyle]" 
+                    for="mill-$[itemNumber]" 
+                    class="item-label-standard valign-text-middle gothica1-light-charade-14px">Mill</label>
+                    
+                  </td>
+
+                  <!-- mill -->
+                  <td>
+                    <input
+                      disabled
+                      value="$[MILL NAME]"
+                      type="text"
+                      id="mill-$[itemNumber]"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light required email-content"
+                      data-key="MILL-$[itemNumber]"
+                      data-log-id="$[LOG ID]"
+                      style="$[tStyle]"
+                      >
+                    </input>
+                  </td>
+                </tr>
+
+                <!-- row 2 -->
+                <!-- design -->
+                <tr class="item-group-standard">
+
+                  <!-- design label -->
+                  <td>
+                    <label 
+                    style="$[tStyle]"
+                    for="design-$[itemNumber]" 
+                    class="item-label-standard valign-text-middle gothica1-light-charade-14px">Design</label>
+                  </td>
+
+                  <!-- design -->
+                  <td>
+                    <input
+                      disabled
+                      value="$[TEMPLE DESIGN NAME]"
+                      type="text"
+                      id="design-$[itemNumber]"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light required email-content"
+                      data-key="DESIGN-$[itemNumber]"
+                      data-log-id="$[LOG ID]"
+                      style="$[tStyle]"
+                      >
+                    </input>
+                  </td>
+                </tr>
+
+                <!-- row 3 -->
+                <!-- color -->
+                <tr class="item-group-standard">
+
+                  <!-- color label -->
+                  <td>
+                    <label 
+                    style="$[tStyle]"
+                    for="color-$[itemNumber]" 
+                    class="item-label-standard valign-text-middle gothica1-light-charade-14px">Color</label>
+                  </td>
+
+                  <!-- color -->
+                  <td>
+                    <input
+                      disabled
+                      value="$[TEMPLE COLORWAY NAME]"
+                      type="text"
+                      id="color-$[itemNumber]"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light required email-content"
+                      data-key="COLOR-$[itemNumber]"
+                      data-log-id="$[LOG ID]"
+                      style="$[tStyle]"
+                      >
+                    </input>
+                  </td>
+                </tr>
+
+                <!-- row 4 -->
+                <!-- size -->
+                <tr class="item-group-standard">
+
+                  <!-- size label -->
+                  <td>
+                    <label 
+                    style="$[tStyle]"
+                    for="size-$[itemNumber]" 
+                    class="item-label-standard valign-text-middle gothica1-light-charade-14px">Size</label>
+                  </td>
+
+                  <!-- size -->
+                  <td>
+                    <input
+                      disabled
+                      value="$[SAMPLE TYPE]"
+                      style="flex-direction: revert; $[tStyle]"
+                      id="size-$[itemNumber]"
+                      class="middle-form-input valign-text-middle gothica1-light-charade-light required email-content"
+                      data-key="SIZE-$[itemNumber]"
+                      data-log-id="$[LOG ID]"
+                      >
+                      </input>
+                  </td>
+                </tr>`;
+
+
+
+
+
+
+
+</script>

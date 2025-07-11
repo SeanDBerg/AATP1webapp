@@ -1,0 +1,53 @@
+<script>
+  function configureClientInteractionsPage(destination) {
+    google.script.run
+      .withSuccessHandler((response) => {
+        console.log(response);
+        response = JSON.parse(response);
+        const { clientInteractions } = response;
+
+        // Assuming the first key has all headers.
+        const firstKey = Object.keys(clientInteractions)[0];
+        const headers = Object.keys(clientInteractions[firstKey]);
+
+        // Build the table headers.
+        let tableHtml = '<div class="grid-view">';
+        tableHtml += '<div class="grid-header">';
+        headers.forEach((header) => {
+          tableHtml += `<div class="header-item">${header}</div>`;
+        });
+        tableHtml += "</div>"; // Close grid-header div.
+
+        // Build the table rows.
+        for (const rowKey in clientInteractions) {
+          const row = clientInteractions[rowKey];
+          tableHtml += '<div class="grid-row">';
+          headers.forEach((header) => {
+            // Make the cell editable and add an onBlur event handler.
+            tableHtml += `<div class="row-item" contenteditable="true" data-row="${rowKey}" data-column="${header}" onblur="cellEdited(this)">${row[header]}</div>`;
+          });
+          tableHtml += "</div>"; // Close grid-row div.
+        }
+
+        tableHtml += "</div>"; // Close grid-view div.
+
+        // Insert the HTML into the container on your page.
+        document.getElementById("grid-container").innerHTML = tableHtml;
+      })
+      .loadPage(["clientInteractions"]);
+  }
+
+  // Define the cellEdited function.
+  function cellEdited(cell) {
+    const rowId = cell.getAttribute("data-row");
+    const columnHeader = cell.getAttribute("data-column");
+    const newValue = cell.innerText;
+
+    // Call the makeSheetEdit Apps Script function with the cell's new value and position.
+    google.script.run
+      .withSuccessHandler((response) => {
+        console.log(response);
+      })
+      .makeSheetEdit(rowId, columnHeader, newValue);
+  }
+</script>

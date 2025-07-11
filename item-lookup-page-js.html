@@ -1,0 +1,1162 @@
+<script>
+  /** DEV Zone */
+function calculateFreightCost(){
+
+    const {instruction, freightObject} = getFreightCalculatorMatch();
+
+    if(instruction == "stop") return
+
+    if(freightObject){
+      console.log(freightObject)
+      //FRIEGHT OBJECT FOUND
+      const freightPriceShowroom = freightObject["FREIGHT PRICE SHOWROOM CURRENCY"];
+      const freightPackingFeeShowroom = freightObject["PACKING FEE SHOWROOM CURRENCY"];
+      const freightApproxDutiesShowroom = freightObject["APPROX. DUTIES SHOWROOM CURRENCY"];
+      const freightTotalShowroom = freightObject["TOTAL FREIGHT PRICE SHOWROOM CURRENCY"];
+      const freightCostVendor = freightObject["FREIGHT COST VENDOR CURRENCY"];
+      const freightPackingFeeVendor = freightObject["PACKING FEE VENDOR CURRENCY"];
+      const freightApproxDutiesVendor = freightObject["APPROX. DUTIES VENDOR CURRENCY"];
+      const freightTotalVendor = freightObject["TOTAL FREIGHT COST VENDOR CURRENCY"];
+
+      const elementObjects = [
+        { "elementID": "freight-price-showroom", "value": freightPriceShowroom },
+        { "elementID": "freight-packing-fee-showroom", "value": freightPackingFeeShowroom },
+        { "elementID": "freight-approximate-duties-showroom", "value": freightApproxDutiesShowroom },
+        { "elementID": "freight-total-showroom", "value": freightTotalShowroom },
+        { "elementID": "freight-cost-vendor", "value": freightCostVendor },
+        { "elementID": "freight-packing-fee-vendor", "value": freightPackingFeeVendor },
+        { "elementID": "freight-approximate-duties-vendor", "value": freightApproxDutiesVendor },
+        { "elementID": "freight-total-vendor", "value": freightTotalVendor },
+        { "elementID": "freight-ship-to-notification", "value": ""},
+        { "elementID": "freight-ship-method-notification", "value": ""},
+      ];
+      
+      elementObjects.forEach(ob => {
+        let {elementID, value} = ob;
+
+        if(!value) value = elementID.indexOf("notification") == -1 ? defaultStr : value
+        else if(!isNaN(Number(value))) value = `$${Number(value).toFixed(2)}`;
+
+        document.getElementById(elementID).innerHTML = value;
+      });
+
+    } else {
+      //FREIGHT OBJECT NOT FOUND
+      const elementObjects = [
+        { "elementID": "freight-price-showroom", "value": ""},
+        { "elementID": "freight-packing-fee-showroom", "value": ""},
+        { "elementID": "freight-approximate-duties-showroom", "value": ""},
+        { "elementID": "freight-total-showroom", "value": ""},
+        { "elementID": "freight-cost-vendor", "value": ""},
+        { "elementID": "freight-packing-fee-vendor", "value": ""},
+        { "elementID": "freight-approximate-duties-vendor", "value": ""},
+        { "elementID": "freight-total-vendor", "value": ""},
+        { "elementID": "freight-ship-to-notification", "value": "NO FREIGHT QUOTE AVAILABLE FOR THIS ITEM. PLEASE CONTACT ADMIN."},
+        { "elementID": "freight-ship-method-notification", "value": ""},
+      ];
+      
+      elementObjects.forEach(ob => {
+        const {elementID, value} = ob;
+        document.getElementById(elementID).innerHTML = value;
+      });
+      }
+
+}
+
+function getFreightCalculatorMatch(){
+  
+  const { product, freightCalculationTable } = destinationsObject["item-lookup-page"];
+  const itemQuantity = document.getElementById("item-quantity-1").value;
+  const shipToState = document.getElementById("freight-ship-to-state-select").value;
+  const shipMethod = document.getElementById("freight-ship-method-select").value;
+
+  console.log({itemQuantity, shipToState, shipMethod})
+
+  if(!Object.keys(product).length || (!itemQuantity || !shipToState || !shipMethod)) return {instruction: "stop"};
+
+  const shipToNotificationElem = document.getElementById("freight-ship-to-notification");
+  const shipMethodNotificationElem = document.getElementById("freight-ship-method-notification");
+  const isMatch = (focusObj, property, value) => !focusObj[property] || focusObj[property] == value;
+  // const isMatch = (focusObj, property, value) => {
+  //   if(value && !focusObj[property]) return false
+  //   else return !focusObj[property] || focusObj[property] == value
+  //   };
+  const isRangeMatch = (focusObj, propertyMin, propertyMax, value) => {
+    const numValue = Number(value);
+    return (!focusObj[propertyMin] || !focusObj[propertyMax]) || (numValue >=
+    Number(focusObj[propertyMin]) && numValue <= Number(focusObj[propertyMax])); 
+    }
+
+  //use "VENDOR CURRENCY" symbol here?
+  const {
+    ["VENDOR"]: vendor, 
+    ["PRODUCT CATEGORY"]: category, 
+    ["PRODUCT SUBCATEGORY"]: subcategory,
+    ["VENDOR SUBCATEGORY"]: vendorSubcategory,
+    ["WIDTH (inches)"]: width,
+    ["CONTENT"]: content,
+    ["QTY SHOWROOM UNIT OF MEASURE"]: showroomUnitOfMeasure,
+    } = product;
+
+    console.log(product);
+
+    let freightObject;
+    // let highestMatch = 0;
+
+    //given the provided info, search for the match
+    for(const id in freightCalculationTable){
+      const focusFreightObject = freightCalculationTable[id];
+      // const matchArray = [
+      //   isMatch(focusFreightObject, "CONTENT", content), 
+      //   isMatch(focusFreightObject, "VENDOR", vendor),
+      //   isMatch(focusFreightObject, "CATEGORY", category),
+      //   isMatch(focusFreightObject, "SUBCATEGORY", subcategory),
+      //   isMatch(focusFreightObject, "VENDOR SUBCATEGORY", vendorSubcategory),
+      //   isRangeMatch(focusFreightObject, "WIDTH RANGE MIN", "WIDTH RANGE MAX", width),
+      //   isMatch(focusFreightObject, "QTY SHOWROOM UNIT OF MEASURE", showroomUnitOfMeasure),
+      //   isRangeMatch(focusFreightObject, "QUANTITY RANGE MIN", "QUANTITY RANGE MAX", itemQuantity),
+      //   isMatch(focusFreightObject, "SHIPPING METHOD", shipMethod)
+      // ];
+
+      // if(
+
+      // ) {
+      //   highestMatch = matchArray.filter(f => f).length;
+      // }
+
+      if(
+        isMatch(focusFreightObject, "VENDOR", vendor) &&
+        isMatch(focusFreightObject, "CATEGORY", category) &&
+        isMatch(focusFreightObject, "PRODUCT SUBCATEGORY", subcategory) &&
+        isMatch(focusFreightObject, "VENDOR SUBCATEGORY", vendorSubcategory) &&
+        isRangeMatch(focusFreightObject, "WIDTH RANGE MIN", "WIDTH RANGE MAX", width) &&
+        isMatch(focusFreightObject, "CONTENT", content) && 
+        isMatch(focusFreightObject, "QTY SHOWROOM UNIT OF MEASURE", showroomUnitOfMeasure) && 
+        (focusFreightObject["SHIP-TO STATE"]?.indexOf(shipToState) > -1) &&
+        isRangeMatch(focusFreightObject, "QUANTITY RANGE MIN", "QUANTITY RANGE MAX", itemQuantity) &&
+        isMatch(focusFreightObject, "SHIPPING METHOD", shipMethod)
+      ) {
+        // matchObject[id] = focusFreightObject;
+        // console.log({vendorSubcategory, "VENDOR SUBCATEGORY": focusFreightObject["VENDOR SUBCATEGORY"]});
+        freightObject = focusFreightObject;
+        break;
+        }
+    };
+
+    return { freightObject, instruction: "run" }
+}
+
+function getVendorShippingDetails(vendor, productCategory){
+    
+  const { freightCalculationTable } = destinationsObject["item-lookup-page"];
+  console.log({vendor, productCategory, freightCalculationTable});
+
+  const shipToStateSet = new Set();
+  const shippingMethodSet = new Set();
+
+    for(const id in freightCalculationTable){
+      const focusFreightObject = freightCalculationTable[id];
+
+      if(focusFreightObject["VENDOR"] == vendor && focusFreightObject["CATEGORY"] == productCategory){
+        const shipToStatesArray = focusFreightObject["SHIP-TO STATE"].split(",").map(m => m.trim());
+        const shippingMethodsArray = focusFreightObject["SHIPPING METHOD"].split(",").map(m => m.trim());
+
+        shipToStatesArray.forEach(state => shipToStateSet.add(state));
+        shippingMethodsArray.forEach(method => shippingMethodSet.add(method));
+      }
+    };
+
+  const shipToStates = [...shipToStateSet].sort();
+  const shippingMethods = [...shippingMethodSet].sort();
+
+  return {shipToStates, shippingMethods}
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  /*************************************************** SPECIFIED CUTS FEE QUANTITY ON CHANGE***********************************************/
+function cutsFeeQtyOnChange(quantityElem){
+  const { product } = destinationsObject["item-lookup-page"];
+  var quantityNum = isNaN(Number(quantityElem.value)) ? 0 : Number(quantityElem.value);
+  const type = quantityElem.id.indexOf("vendor") > -1 ? "vendor" : "showroom";
+  const currency = product[type == "vendor" ? "VENDOR CURRENCY" : "SHOWROOM CURRENCY"];
+  const cutsFeeFactoredElem = document.getElementById(type == "vendor" ? "cuts-fee-factored-vendor" :  "cuts-fee-factored");
+  const cutsFeeSubtextElem = document.getElementById(type == "vendor" ? "cuts-fee-subtext-vendor" :  "cuts-fee-subtext-showroom");
+
+  if(quantityNum < 0){
+    quantityElem.value = "0";
+    quantityNum = 0;
+  }
+
+  var specifiedCutFee = product[type == "vendor" ? "SPECIFIED CUTS FEE VENDOR CURRENCY" : "SPECIFIED CUTS FEE SHOWROOM CURRENCY"];
+  specifiedCutFee = isNaN(Number(specifiedCutFee)) ? defaultStr : Number(specifiedCutFee);
+  const cutsFee = quantityNum * specifiedCutFee;
+
+  //currently unused
+  // var cutsFeeInfo = `${currency}${cutsFee}<br><br><span class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit" style="font-size: var(--font-size-xs)">${currency}${specifiedCutFee} PER CUT</span>`;
+
+  cutsFeeFactoredElem.innerHTML = `${currency}${cutsFee}`;
+  cutsFeeSubtextElem.innerHTML = `<span class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit" style="font-size: var(--font-size-xs)">${currency}${specifiedCutFee} PER CUT</span>`;
+
+  destinationsObject["item-lookup-page"][type == "vendor" ? "vendorFees" : "fees"]["SPECIFIED CUTS FEE"] = `${currency}${cutsFee} (${currency}${specifiedCutFee} PER CUT)`;
+
+  populateSummaryBox();
+}
+
+
+function cutsFeeCheckboxOnChange(checkboxElem){
+  /**
+   *  - move qty selector to output td
+   *  - make label all one line
+   * 
+   * NEEDS:
+   * default: unchecked, qty selector hidden
+   * when checked:
+   *  - qty/output unhidden
+   *  - sub-text displays "$35 for specified cuts fee"
+   */
+
+
+  const type = checkboxElem.id.indexOf("vendor") > -1 ? "vendor" : "showroom";
+  const { product } = destinationsObject["item-lookup-page"];
+  const cutsFee = product[type == "vendor" ? "SPECIFIED CUTS FEE VENDOR CURRENCY" : "SPECIFIED CUTS FEE SHOWROOM CURRENCY"];
+  const cutsQuantityElem = document.getElementById(type == "vendor" ? "cuts-fee-quantity-vendor" : "cuts-fee-quantity-showroom");
+  const cutsFeeSubtextElem = document.getElementById(type == "vendor" ? "cuts-fee-subtext-vendor" :  "cuts-fee-subtext-showroom");
+  if(!cutsFee) checkboxElem.checked = false;
+  
+  const checked = checkboxElem.checked;
+
+  if(!checked) {
+    document.getElementById(type == "vendor" ? "cuts-fee-factored-vendor" :  "cuts-fee-factored").innerHTML = "";
+    cutsQuantityElem.style.display = "none";
+    cutsFeeSubtextElem.style.display = "none";
+    // destinationsObject["item-lookup-page"][type == "vendor" ? "vendorFees" : "fees"]["SPECIFIED CUTS FEE"] = "0";
+    delete destinationsObject["item-lookup-page"][type == "vendor" ? "vendorFees" : "fees"]["SPECIFIED CUTS FEE"]
+    populateSummaryBox();
+    return
+  };
+
+  // //set the cuts fee
+  const cutsFeeFactoredElem = document.getElementById(type == "vendor" ? "cuts-fee-factored-vendor" :  "cuts-fee-factored");
+  const currency = product[type == "vendor" ? "VENDOR CURRENCY" : "SHOWROOM CURRENCY"];
+  const specifiedCutFee = product[type == "vendor" ? "SPECIFIED CUTS FEE VENDOR CURRENCY" : "SPECIFIED CUTS FEE SHOWROOM CURRENCY"];
+  // var cutsFeeInfo = `<br><br><span class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit" style="font-size: var(--font-size-xs)">${currency}${cutsFee} PER CUT</span>`;
+
+  // cutsFeeFactoredElem.innerHTML = cutsFeeInfo;
+
+  cutsFeeSubtextElem.innerHTML = `<span class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit" style="font-size: var(--font-size-xs)">${currency}${specifiedCutFee} PER CUT</span>`;
+
+  cutsQuantityElem.style.display = "block";
+  cutsFeeSubtextElem.style.display = "block";
+
+
+  cutsFeeQtyOnChange(cutsQuantityElem);
+}
+
+
+
+
+
+
+
+
+
+
+/******************************* MOVE THE BORDER FOR ADDITIONAL FEES FOR QUOTING AND PO'S *********************************************/
+function moveAdditionalFeeBorder() {
+  const hrElem = document.getElementById("additional-fees-table-middle-border");
+  const hrAnchorElem = document.getElementById("hr-anchor-for-additional-fee-border");
+  const headerElem = document.getElementById("header");
+  
+  const headerHeight = headerElem.offsetHeight; // Get the height of the header element
+  
+  const anchorTop = hrAnchorElem.getBoundingClientRect().top - headerHeight; // Adjusted top position
+  hrElem.style.top = anchorTop + "px"; // Set the top position of the border element
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  /********************************* COPY TO CLIPBOARD ONCLICK *****************************************/
+function copyToClipboard(buttonElement, elementToCopyId){
+  const elementToCopy = document.getElementById(elementToCopyId);
+  const richContent = elementToCopy.nodeName.toLowerCase() === 'span' ?
+    elementToCopy.innerHTML :
+    elementToCopy.value;
+  const plainContent = richContent.replace(/<br>/g, '\n').replace(/<.*?>/g, '')
+  pasteRich(richContent, plainContent)
+
+  const prevButtonText = buttonElement.innerHTML
+  buttonElement.innerHTML = elementToCopy.nodeName.toLowerCase() === 'span' ? "Copied" : "COPIED";
+  //set a timer for the button to go back to normal
+  setTimeout(() => {
+    buttonElement.innerHTML = prevButtonText;
+  }, 2000);
+
+}
+
+/** Paste richly formatted text.
+ * Found here: https://stackoverflow.com/a/77305170
+ *
+ * @param {string} rich - the text formatted as HTML
+ * @param {string} plain - a plain text fallback
+ */
+async function pasteRich(rich, plain) {
+  if (typeof ClipboardItem !== "undefined") {
+    // Shiny new Clipboard API, not fully supported in Firefox.
+    // https://developer.mozilla.org/en-US/docs/Web/API/Clipboard_API#browser_compatibility
+    const html = new Blob([rich], { type: "text/html" });
+    const text = new Blob([plain], { type: "text/plain" });
+    const data = new ClipboardItem({ "text/html": html, "text/plain": text });
+    await navigator.clipboard.write([data]);
+  } else {
+    // Fallback using the deprecated `document.execCommand`.
+    // https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand#browser_compatibility
+    const cb = e => {
+      e.clipboardData.setData("text/html", rich);
+      e.clipboardData.setData("text/plain", plain);
+      e.preventDefault();
+    };
+    document.addEventListener("copy", cb);
+    document.execCommand("copy");
+    document.removeEventListener("copy", cb);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+  /********************************* POPULATE SUMMARY BOX *****************************************/
+function populateSummaryBox(){
+  const summaryBoxElem = document.getElementById("summary-box");
+  const summaryBoxVendorElem = document.getElementById("summary-box-vendor");
+  const { fees, vendorFees, product } = destinationsObject["item-lookup-page"];
+  const showroomCurrency = product["SHOWROOM CURRENCY"];
+  const vendorCurrency = product["VENDOR CURRENCY"];
+  var feesList = "";
+  var vendorFeesList = "";
+
+  //set showroom summary
+  // console.log('fees', fees)
+  for(feeName in fees) {
+    // let fee = Number(fees[feeName] || 0);
+    // if (fee == 0) {
+    //   continue;
+    // }
+    let feeHeader = feeName.toLowerCase() !== 'cfa fee' ?
+      toTitleCase(feeName) :
+      'CFA Fee';
+    feesList += `<span style='font-weight: bold'>${feeHeader}</span>: ${fees[feeName].toLowerCase()}<br>`;
+  };
+
+  if(feesList) summaryBoxElem.innerHTML = `<span style='font-weight: bold'>Other Fees</span>:<br><br>${feesList}`
+  else summaryBoxElem.innerHTML = "";
+
+  //set vendor summary
+  // console.log('vendor fees', vendorFees)
+  for(feeName in vendorFees) {
+    // let fee = Number(vendorFees[feeName] || 0);
+    // if(fee == 0) continue;
+    let feeHeader = feeName.toLowerCase() !== 'cfa fee' ?
+      toTitleCase(feeName) :
+      'CFA Fee';
+    vendorFeesList += `<span style='font-weight: bold'>${feeHeader}</span>: ${vendorFees[feeName].toLowerCase()}<br>`;
+  };
+
+  if(vendorFeesList) summaryBoxVendorElem.innerHTML = `<span style='font-weight: bold'>Other Fees</span>:<br><br>${vendorFeesList}`
+  else summaryBoxVendorElem.innerHTML = "";
+}
+
+function toTitleCase(str) {
+  return str.toLowerCase().replace(/\b[a-z]/g, function(char) {
+    return char.toUpperCase();
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+  /********************************* RUSH FEE CHECKBOX ONCHANGE *****************************************/
+function rushCheckboxOnChange(checkboxElem){
+  //update: do not grey it out
+  const type = checkboxElem.id.indexOf("vendor") > -1 ? "vendor" : "showroom";
+  const { product } = destinationsObject["item-lookup-page"];
+  const rushFee = product[type == "vendor" ? "RUSH FEE VENDOR CURRENCY" : "RUSH FEE SHOWROOM CURRENCY"];
+  if(!rushFee) checkboxElem.checked = false;
+  
+  const checked = checkboxElem.checked;
+
+  if(!checked) {
+    // var grey = "#808080";
+    // checkboxElem.style["border-color"] = grey;
+    // document.getElementById("rush-fee-factored-label").style.color = grey;
+    document.getElementById(type == "vendor" ? "rush-fee-factored-vendor" :  "rush-fee-factored").innerHTML = "";
+    // destinationsObject["item-lookup-page"][type == "vendor" ? "vendorFees" : "fees"]["RUSH FEE"] = "0";
+    delete destinationsObject["item-lookup-page"][type == "vendor" ? "vendorFees" : "fees"]["RUSH FEE"]
+    populateSummaryBox();
+    return
+  };
+
+  // checkboxElem.style["border-color"] = "#000000";
+  // document.getElementById("rush-fee-factored-label").style.color = "#000000";
+
+  //set the rush fee
+  const rushFeeFactoredElem = document.getElementById(type == "vendor" ? "rush-fee-factored-vendor" :  "rush-fee-factored");
+  const currency = product[type == "vendor" ? "VENDOR CURRENCY" : "SHOWROOM CURRENCY"];
+  rushFeeFactoredElem.innerHTML = `${currency}${rushFee}`;
+
+  destinationsObject["item-lookup-page"][type == "vendor" ? "vendorFees" : "fees"]["RUSH FEE"] = `${currency}${rushFee}`;
+
+  populateSummaryBox();
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+/********************************* CFA FEE CHECKBOX ONCHANGE *****************************************/
+function cfaCheckboxOnChange(checkboxElem){
+  //input cfa checkbox if...
+  //CFA is YES AND if the quantity is above the minimum quantity
+  //box checked sends the fee into the summary box and the span
+  const type = checkboxElem.id.indexOf("vendor") > -1 ? "vendor" : "showroom";
+  const { product } = destinationsObject["item-lookup-page"];
+
+  disableCheckbox = true
+  const cfaOffered = product["CFA OFFERED"];
+  const cfaDefault = product['CFA DEFAULT']
+  const cfaFeeMinQty = Number(product['CFA FEE MINIMUM QTY'])
+  const cfaMinQty = Number(product['CFA MINIMUM QTY'])
+  const cfaFeeAmount = Number(product[type == "vendor" ? "CFA FEE VENDOR CURRENCY" : "CFA FEE SHOWROOM CURRENCY"])
+  const qty = Number(document.getElementById("item-quantity-1").value);
+  if (cfaOffered && cfaOffered.toLowerCase() === 'yes' && cfaDefault && cfaDefault.toLowerCase() === 'no') {
+    if (cfaFeeMinQty || (cfaMinQty && qty >= cfaMinQty && cfaFeeAmount)) {
+      disableCheckbox = false
+    }
+  }
+
+
+  if(disableCheckbox) {
+    var grey = "#808080";
+    checkboxElem.style["border-color"] = grey;
+    document.getElementById(type == "vendor" ? "cfa-fee-factored-vendor-label" : "cfa-fee-factored-label").style.color = grey;
+    document.getElementById(type == "vendor" ? "cfa-fee-factored-vendor" : "cfa-fee-factored").innerHTML = defaultStr;
+    checkboxElem.style.display = 'none';
+    delete destinationsObject["item-lookup-page"][type == "vendor" ? "vendorFees" : "fees"]["CFA FEE"];
+    populateSummaryBox();
+    return
+  };
+
+  checkboxElem.style.display = 'block';
+  checkboxElem.style["border-color"] = "#000000";
+  document.getElementById(type == "vendor" ? "cfa-fee-factored-vendor-label" : "cfa-fee-factored-label").style.color = "#000000";
+  
+  const currency = product[type == "vendor" ? "VENDOR CURRENCY" : "SHOWROOM CURRENCY"]
+  const unitOfMeasure = (amount) => {
+    const unit = product[type == "vendor" ? "QTY VENDOR UNIT OF MEASURE" : "QTY SHOWROOM UNIT OF MEASURE"] || "?"
+    if (amount !== 1) {
+      return `${unit}S`
+    }
+    return unit
+  }
+  const cfaFeeFactoredElem = document.getElementById(type == "vendor" ? "cfa-fee-factored-vendor" : "cfa-fee-factored");
+  cfaFeeFactoredElem.innerHTML = defaultStr
+  if (checkboxElem.checked) {
+    if (cfaFeeMinQty) {
+      if (qty < cfaFeeMinQty) {
+        const cfaFeeExplanation = `${currency}${cfaFeeAmount} IF UNDER ${cfaFeeMinQty} ${unitOfMeasure(cfaFeeMinQty)}`
+        const cfaFeeHTML = `${currency}${cfaFeeAmount}<br><br><span class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit" style="font-size: var(--font-size-xs)">${cfaFeeExplanation}</span>`
+        cfaFeeFactoredElem.innerHTML = cfaFeeHTML
+        destinationsObject["item-lookup-page"][type == "vendor" ? "vendorFees" : "fees"]["CFA FEE"] = cfaFeeExplanation;
+      } else {
+        checkboxElem.style.display = 'none';
+        delete destinationsObject["item-lookup-page"][type == "vendor" ? "vendorFees" : "fees"]["CFA FEE"];
+      }
+    } else {
+      const cfaFeeExplanation = `${currency}${cfaFeeAmount}`
+      cfaFeeFactoredElem.innerHTML = cfaFeeExplanation
+      destinationsObject["item-lookup-page"][type == "vendor" ? "vendorFees" : "fees"]["CFA FEE"] = cfaFeeExplanation;
+    }
+  } else {
+    delete destinationsObject["item-lookup-page"][type == "vendor" ? "vendorFees" : "fees"]["CFA FEE"];
+  }
+
+  populateSummaryBox();
+
+
+}
+
+
+
+
+
+
+
+
+
+/********************************* NET/RETAIL DROPDOWN TOGGLE ONCHANGE *****************************************/
+function netRetailToggle(netRetailElem){
+  const priceType = netRetailElem.value;
+  destinationsObject["item-lookup-page"].priceType = priceType;
+
+  const qtyElem = document.getElementById("item-quantity-1");
+  const itemUnitPerMeasurePriceElem = document.getElementById(`price-unit-price-1`);
+  const { product } = destinationsObject["item-lookup-page"];
+
+  const showroomCurrency = product["SHOWROOM CURRENCY"];
+  const designerProductPrice = priceType == "NET" ? product["DESIGNER NET PRICE SHOWROOM CURRENCY"] : product["RETAIL PRICE SHOWROOM CURENCY"];
+  
+  itemUnitPerMeasurePriceElem.innerHTML = `${showroomCurrency}${designerProductPrice}`;
+
+  quantityChangeItemLookup(qtyElem);
+
+}
+
+
+
+
+
+
+
+
+
+/********************************* QUANTITY ONCHANGE *****************************************/
+function quantityChangeItemLookup(qtyElem){
+
+  // console.log('running quantityChangeItemLookup')
+
+  const quantityConvertedElem = document.getElementById("quantity-converted-1");
+  const quantityUnconvertedElem = document.getElementById("quantity-unconverted-1");
+  const { product } = destinationsObject["item-lookup-page"];
+  const unitsConversionMultiplier = Number(destinationsObject["item-lookup-page"].unitMultiplier);
+
+  //change the extended cost amount
+  const qty = Number(qtyElem.value || 0);
+  const convertedUnits = qty * unitsConversionMultiplier;
+  const unitCostElem = document.getElementById("price-unit-cost-1");
+  const unitPriceElem = document.getElementById("price-unit-price-1");
+  const extendedCostElem = document.getElementById("extended-cost");
+  const extendedPriceElem = document.getElementById("extended-price");
+  const unitCost = Number(extractNumbersFromString(unitCostElem.innerHTML));
+  const unitPrice = Number(extractNumbersFromString(unitPriceElem.innerHTML));
+  const showroomUnitOfMeasure = amount => {
+    if (amount !== 1) {
+      return `${product["QTY SHOWROOM UNIT OF MEASURE"] || "?"}S`
+    }
+    return `${product["QTY SHOWROOM UNIT OF MEASURE"] || "?"}`
+  }
+
+  // SHOWROOM FEES
+  const showroomCurrency = product["SHOWROOM CURRENCY"];
+
+  //set the cut fee factored
+  const cutFeeFactoredElem = document.getElementById("cut-fee-factored");
+  const cutFeeFactoredCheckboxElem = document.getElementById("cut-fee-factored-checkbox");
+  const cutFeeMin = product["CUT FEE MINIMUM QTY"] || "0";
+  const cutFeeUnderMinCharge = product["CUT FEE SHOWROOM CURRENCY"];
+  const cutFee = `${showroomCurrency}${cutFeeUnderMinCharge} IF UNDER ${cutFeeMin} ${showroomUnitOfMeasure(cutFeeMin)}`;
+  const cutFeeFactored = Number(qty) >= Number(cutFeeMin) ? 0 : cutFeeUnderMinCharge;
+  const cutFeeInfo = `<br><br><span class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit" style="font-size: var(--font-size-xs)">${cutFee}</span>`
+  cutFeeFactoredElem.innerHTML = cutFeeFactored == "0" ? defaultStr : `${showroomCurrency}${cutFeeFactored}${cutFeeInfo}`;
+  // cutFeeFactoredElem.innerHTML = cutFeeFactored == "0" ? `${defaultStr}${cutFeeInfo}` : `${showroomCurrency}${cutFeeFactored}${cutFeeInfo}`;
+
+  if ( cutFeeFactored != "0" && qty > 0) cutFeeFactoredCheckboxElem.style.display = "block"
+  else cutFeeFactoredCheckboxElem.style.display = "none";
+
+  if (cutFeeFactored) {
+    destinationsObject["item-lookup-page"].fees["CUT FEE"] = cutFee;
+  } else if ("CUT FEE" in destinationsObject["item-lookup-page"].fees) {
+    delete destinationsObject["item-lookup-page"].fees["CUT FEE"]
+  }
+
+  //set the cfa fee
+  const cfaShowroomCheckbox = document.getElementById('cfa-fee-checkbox')
+  cfaCheckboxOnChange(cfaShowroomCheckbox)
+
+  //set setup fee factored
+  const setupFeeFactoredElem = document.getElementById("setup-fee-factored");
+  const setupFeeFactoredCheckboxElem = document.getElementById("setup-fee-factored-checkbox");
+  const setupMin = product["SETUP FEE MINIMUM QTY"] || "0";
+  const setupFeeUnderMinCharge = product["SETUP FEE SHOWROOM CURRENCY"];
+  const setupFee = `${showroomCurrency}${setupFeeUnderMinCharge} IF UNDER ${setupMin} ${showroomUnitOfMeasure(setupMin)}`;
+  const setupFeeFactored = Number(qty) >= Number(setupMin) ? 0 : setupFeeUnderMinCharge;
+  const setupFeeInfo = `<br><br><span class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit" style="font-size: var(--font-size-xs)">${setupFee}</span>`;
+  setupFeeFactoredElem.innerHTML = setupFeeFactored == "0" ? defaultStr :  `${showroomCurrency}${setupFeeFactored}${setupFeeInfo}`;
+  // setupFeeFactoredElem.innerHTML = setupFeeFactored == "0" ? `${defaultStr}${setupFeeInfo}` :  `${showroomCurrency}${setupFeeFactored}${setupFeeInfo}`;
+
+  if ( setupFeeFactored != "0" && qty > 0) setupFeeFactoredCheckboxElem.style.display = "block"
+  else setupFeeFactoredCheckboxElem.style.display = "none";
+
+  if (setupFeeFactored) {
+    destinationsObject["item-lookup-page"].fees["SETUP FEE"] = setupFee;
+  } else if ("SETUP FEE" in destinationsObject["item-lookup-page"].fees) {
+    delete destinationsObject["item-lookup-page"].fees["SETUP FEE"]
+  }
+
+
+
+
+  /***********************************************************************************************************************************************/
+
+  //VENDOR FEES
+  const vendorCurrency = product["VENDOR CURRENCY"];
+  // const vendorUnitOfMeasure = `${product["QTY VENDOR UNIT OF MEASURE"] || "?"}(S)`;
+  const vendorUnitOfMeasure = amount => {
+    if (amount !== 1) {
+      return `${product["QTY VENDOR UNIT OF MEASURE"] || "?"}S`
+    }
+    return `${product["QTY VENDOR UNIT OF MEASURE"] || "?"}`
+  }
+
+  //set the cut fee factored
+  const cutFeeFactoredVendorElem = document.getElementById("cut-fee-factored-vendor");
+  const cutFeeFactoredVendorCheckboxElem = document.getElementById("cut-fee-factored-vendor-checkbox");
+  const cutFeeUnderMinChargeVendor = product["CUT FEE VENDOR CURRENCY"];
+  const cutFeeVendor = `${vendorCurrency}${cutFeeUnderMinChargeVendor} IF UNDER ${cutFeeMin} ${vendorUnitOfMeasure(cutFeeMin)}`;
+  const cutFeeFactoredVendor = Number(qty) >= Number(cutFeeMin) ? 0 : cutFeeUnderMinChargeVendor;
+  const cutFeeInfoVendor = `<br><br><span class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit" style="font-size: var(--font-size-xs)">${cutFeeVendor}</span>`
+  cutFeeFactoredVendorElem.innerHTML = cutFeeFactoredVendor == "0" ? defaultStr : `${showroomCurrency}${cutFeeFactoredVendor}${cutFeeInfoVendor}`;
+  // cutFeeFactoredVendorElem.innerHTML = cutFeeFactoredVendor == "0" ? `${defaultStr}${cutFeeInfoVendor}` : `${showroomCurrency}${cutFeeFactoredVendor}${cutFeeInfoVendor}`;
+
+  if ( cutFeeFactoredVendor != "0" && qty > 0) cutFeeFactoredVendorCheckboxElem.style.display = "block"
+  else cutFeeFactoredVendorCheckboxElem.style.display = "none";
+
+  if (cutFeeFactoredVendor) {
+    destinationsObject["item-lookup-page"].vendorFees["CUT FEE"] = cutFeeVendor;
+  } else if ("CUT FEE" in destinationsObject["item-lookup-page"].vendorFees) {
+    delete destinationsObject["item-lookup-page"].vendorFees["CUT FEE"]
+  }
+  
+  //set the cfa fee
+  const cfaVendorCheckbox = document.getElementById('cfa-fee-vendor-checkbox')
+  cfaCheckboxOnChange(cfaVendorCheckbox)
+
+  //set setup fee factored
+  const setupFeeFactoredVendorElem = document.getElementById("setup-fee-factored-vendor");
+  const setupFeeFactoredVendorCheckboxElem = document.getElementById("setup-fee-factored-vendor-checkbox");
+  const setupFeeUnderMinChargeVendor = product["SETUP FEE VENDOR CURRENCY"];
+  const setupFeeFactoredVendor = Number(qty) >= Number(setupMin) ? 0 : setupFeeUnderMinChargeVendor;
+  const setupFeeVendor = `${vendorCurrency}${setupFeeUnderMinChargeVendor} IF UNDER ${setupMin} ${vendorUnitOfMeasure(setupMin)}`;
+  const setupFeeInfoVendor = `<br><br><span class="td-multi-item-form-input-item-lookup valign-text-middle gothica1-light-charade-light user-no-edit" style="font-size: var(--font-size-xs)">${setupFeeVendor}</span>`;
+  setupFeeFactoredVendorElem.innerHTML = setupFeeFactoredVendor == "0" ? defaultStr :  `${vendorCurrency}${setupFeeFactoredVendor}${setupFeeInfoVendor}`;
+  // setupFeeFactoredVendorElem.innerHTML = setupFeeFactoredVendor == "0" ? `${defaultStr}${setupFeeInfoVendor}` :  `${vendorCurrency}${setupFeeFactoredVendor}${setupFeeInfoVendor}`;
+
+  if ( setupFeeFactoredVendor != "0" && qty > 0) setupFeeFactoredVendorCheckboxElem.style.display = "block"
+  else setupFeeFactoredVendorCheckboxElem.style.display = "none";
+
+  if (setupFeeFactoredVendor) {
+    destinationsObject["item-lookup-page"].vendorFees["SETUP FEE"] = setupFeeVendor;
+  } else if ("SETUP FEE" in destinationsObject["item-lookup-page"].vendorFees) {
+    delete destinationsObject["item-lookup-page"].vendorFees["SETUP FEE"]
+  }
+
+  quantityConvertedElem.innerHTML = Number(convertedUnits).toFixed(2);
+  quantityUnconvertedElem.innerHTML = Number(qty).toFixed(2);
+
+  const extendedCost = convertedUnits * unitCost;
+  const extendedPrice = qty * unitPrice;
+
+  extendedCostElem.innerHTML = Number(extendedCost).toFixed(2);
+  extendedPriceElem.innerHTML = Number(extendedPrice).toFixed(2);
+
+  //manage notification
+  manageQuantityNotification(qtyElem);
+
+  populateSummaryBox();
+
+  smartPluralization(qty);
+  
+}
+
+function smartPluralization(qty) {
+  const vendorUnitOfMeasureElem = document.getElementById(`vendor-unit-of-measure-1`);
+  const vendorUnitOfMeasureElem2 = document.getElementById(`unit-of-measure-duplicate-1`);
+  const priceUnitOfMeasureElem = document.getElementById("unit-of-measure-duplicate-price-1");
+  const unitOfMeasureElems = [vendorUnitOfMeasureElem, vendorUnitOfMeasureElem2, priceUnitOfMeasureElem];
+
+  unitOfMeasureElems.forEach(elem => {
+    const elemText = elem.textContent;
+    let cleanUnit = elemText;
+
+    if (elemText.includes('(')) {
+      cleanUnit = elemText.slice(0, elemText.indexOf('('))
+    } else if (elemText[elemText.length - 1] === 'S') {
+      cleanUnit = elemText.slice(0, elemText.length - 1)
+    }
+    elem.textContent = cleanUnit;
+    console.log(elem.textContent, cleanUnit);
+    if (qty !== 1) {
+      if(elem.textContent.indexOf("FOOT") > -1 || elem.textContent.indexOf("FEET") > -1) elem.textContent = elem.textContent.replace("FOOT", "FEET") 
+      else elem.textContent += 'S'
+    } else {
+      if(elem.textContent.indexOf("FOOT") > -1 || elem.textContent.indexOf("FEET") > -1) elem.textContent = elem.textContent.replace("FEET", "FOOT") 
+    }
+  })
+}
+
+/********************************* ITEM LOOKUP COLORWAY SELECT ONCHANGE *****************************************/
+function colorwaySelectorChangeItemLookup(selectElement){
+  console.log('running colorwaySelectorChangeItemLookup')
+
+  const selectedColorway = selectElement.value;
+  const { products } = destinationsObject["item-lookup-page"];
+
+  const patternNameElem = document.getElementById(`pattern-name-1`);
+  const templeIdElem = document.getElementById(`temple-code-1`);
+  const vendorSkuElem = document.getElementById(`vendor-sku-1`);
+  const vendorNameElem = document.getElementById(`vendor-name-1`);
+  const itemUnitPerMeasureElem = document.getElementById(`price-unit-cost-1`);
+  const vendorUnitOfMeasureElem = document.getElementById(`vendor-unit-of-measure-1`);
+  const vendorUnitOfMeasureElem2 = document.getElementById(`unit-of-measure-duplicate-1`);
+  const contentElem = document.getElementById(`item-content`);
+  const statusElem = document.getElementById(`item-status`);
+  const widthElem = document.getElementById(`width`);
+  const repeatElem = document.getElementById(`repeat`);
+  const cutFeeElem = document.getElementById(`cut-fee`);
+  const stockedPrintedElem = document.getElementById(`stocked-printed`);
+  const absoluteMinElem = document.getElementById(`absolute-min`);
+  const outOfStockElem = document.getElementById(`out-of-stock`);
+  const maxPieceSizeElem = document.getElementById(`max-piece-size`);
+  // const cfaOfferedElem = document.getElementById(`cfa-offered`);
+  // const cfaMinElem = document.getElementById(`cfa-minimum`);
+  const notesElem = document.getElementById(`notes-to-consider`);
+
+  /** NEW ELEMS ADDED BY NATHAN ~2/20/24*/
+  const setupFeeElem = document.getElementById('setup-fee');
+  const rushFeeElem = document.getElementById('rush-fee');
+  const cfaElem = document.getElementById('cfa');
+  /** END NEW ELEMS */
+
+  /** NEW ELEMS ADDED BY DANIEL ~3/3/24 */
+  const freightPriceShowroomElem = document.getElementById('freight-price-showroom');
+  const freightPackingFeeShowroomElem = document.getElementById('freight-packing-fee-showroom');
+  const freightApproxDutiesShowroomElem = document.getElementById('freight-approximate-duties-showroom');
+  const freightTotalShowroomElem = document.getElementById('freight-total-showroom');
+  const freightCostVendorElem = document.getElementById('freight-cost-vendor');
+  const freightPackingFeeVendorElem = document.getElementById('freight-packing-fee-vendor');
+  const freightApproxDutiesVendorElem = document.getElementById('freight-approximate-duties-vendor');
+  const freightTotalVendorElem = document.getElementById('freight-total-vendor');
+  const freightShipToSelectElem = document.getElementById("freight-ship-to-state-select");
+  const freightShipMethodSelectElem = document.getElementById("freight-ship-method-select");
+  const freightShipToNotificationElem = document.getElementById("freight-ship-to-notification");
+  const freightShipMethodNotificationElem = document.getElementById("freight-ship-method-notification");
+  const { freightObject } = getFreightCalculatorMatch();
+  /** END NEW ELEMS */
+
+  const itemQuantityElem = document.getElementById("item-quantity-1");
+  const itemQuantityNotificationElem = document.getElementById("quantity-notification-1");
+  const extendedCostElem = document.getElementById("extended-cost");
+  const extendedPriceElem = document.getElementById("extended-price");
+  const quantityConvertedElem = document.getElementById("quantity-converted-1");
+  const quantityUnconvertedElem = document.getElementById("quantity-unconverted-1");
+  const priceUnitOfMeasureElem = document.getElementById("unit-of-measure-duplicate-price-1");
+  const itemUnitPerMeasurePriceElem = document.getElementById(`price-unit-price-1`);
+
+  //showroom fees
+  const cutFeeFactoredElem = document.getElementById("cut-fee-factored");
+  const cfaFeeFactoredElem = document.getElementById("cfa-fee-factored");
+  const setupFeeFactoredElem = document.getElementById("setup-fee-factored");
+  const summaryBoxElem = document.getElementById("summary-box");
+
+  const cutFeeFactoredCheckboxElem = document.getElementById("cut-fee-factored-checkbox");
+  const cfaFeeCheckboxElem = document.getElementById("cfa-fee-checkbox");
+  const setupFeeFactoredCheckboxElem = document.getElementById("setup-fee-factored-checkbox");
+  const rushFeeCheckboxElem = document.getElementById("rush-fee-checkbox");
+
+  //vendor fees
+  const cutFeeFactoredVendorElem = document.getElementById("cut-fee-factored-vendor");
+  const cfaFeeFactoredVendorElem = document.getElementById("cfa-fee-factored-vendor");
+  const setupFeeFactoredVendorElem = document.getElementById("setup-fee-factored-vendor");
+
+  const cutFeeFactoredVendorCheckboxElem = document.getElementById("cut-fee-factored-vendor-checkbox");
+  const cfaFeeVendorCheckboxElem = document.getElementById("cfa-fee-vendor-checkbox");
+  const setupFeeFactoredVendorCheckboxElem = document.getElementById("setup-fee-factored-vendor-checkbox");
+  const rushFeeVendorCheckboxElem = document.getElementById("rush-fee-vendor-checkbox");
+
+  const patternName = patternNameElem.value;
+
+  [
+    templeIdElem, 
+    vendorSkuElem,
+    vendorNameElem, 
+    itemQuantityElem,
+    freightShipToSelectElem,
+    freightShipMethodSelectElem,
+  ]
+  .forEach(e => e["value"] = "");
+
+  [
+    vendorUnitOfMeasureElem,
+    vendorUnitOfMeasureElem2,
+    itemUnitPerMeasureElem,
+    statusElem,
+    contentElem,
+    widthElem,
+    repeatElem,
+    cutFeeElem,
+    stockedPrintedElem,
+    absoluteMinElem,
+    outOfStockElem,
+    maxPieceSizeElem,
+    notesElem,
+    extendedCostElem,
+    extendedPriceElem,
+    itemQuantityNotificationElem,
+    quantityConvertedElem,
+    quantityUnconvertedElem,
+    itemUnitPerMeasurePriceElem,
+    cutFeeFactoredElem,
+    cfaFeeFactoredElem,
+    setupFeeFactoredElem,
+    summaryBoxElem,
+    cutFeeFactoredVendorElem,
+    cfaFeeFactoredVendorElem,
+    setupFeeFactoredVendorElem,
+
+    /** NEW ELEMS ADDED BY NATHAN ~2/20/24 */
+    setupFeeElem,
+    rushFeeElem,
+    cfaElem,
+
+    /** NEW FREIGHT ELEMS ADDED BY DANIEL 3/3/24 */
+    freightPriceShowroomElem,
+    freightPackingFeeShowroomElem,
+    freightApproxDutiesShowroomElem,
+    freightTotalShowroomElem,
+    freightCostVendorElem,
+    freightPackingFeeVendorElem,
+    freightApproxDutiesVendorElem,
+    freightTotalVendorElem,
+    freightShipToNotificationElem,
+    freightShipMethodNotificationElem,
+  ]
+  .forEach(e => e["innerHTML"] = "");
+
+  [      
+    freightShipToSelectElem,
+    freightShipMethodSelectElem,
+    ]
+  .forEach(e => e["innerHTML"] = "<option value=''></option>");
+
+  [
+    cfaFeeCheckboxElem,
+    rushFeeCheckboxElem,
+    cfaFeeVendorCheckboxElem,
+    rushFeeVendorCheckboxElem,
+  ]
+  .forEach(e => e["checked"] = false);
+  cfaCheckboxOnChange(cfaFeeCheckboxElem);
+  rushCheckboxOnChange(rushFeeCheckboxElem);
+  cfaCheckboxOnChange(cfaFeeVendorCheckboxElem);
+  rushCheckboxOnChange(rushFeeVendorCheckboxElem);
+
+  destinationsObject["item-lookup-page"].product = {};
+  destinationsObject["item-lookup-page"].unitMultiplier = 1;
+  destinationsObject["item-lookup-page"].fees = {};
+  destinationsObject["item-lookup-page"].vendorFees = {};
+
+  populateSummaryBox();
+
+  cutFeeFactoredCheckboxElem.style.display = "none";
+  setupFeeFactoredCheckboxElem.style.display = "none";
+
+  cutFeeFactoredVendorCheckboxElem.style.display = "none";
+  setupFeeFactoredVendorCheckboxElem.style.display = "none";
+    
+  if(!patternName || !selectedColorway) return;
+
+  for(let p in products){
+    let product = products[p];
+
+    if(product["PATTERN/CATEGORY"] == patternName && product["COLORWAY"] == selectedColorway){
+
+      destinationsObject["item-lookup-page"].product = product;
+
+      const vendorName = product["VENDOR"];
+      const productCategory = product["PRODUCT CATEGORY"];
+
+      destinationsObject["item-lookup-page"].unitMultiplier = Number(product["UNIT OF MEASURE CONVERSION FACTOR: SHOWROOM TO VENDOR"]);
+              
+      //set input values within the "ITEM" table
+      templeIdElem.value = product["TEMPLE DM CODE"];
+      vendorSkuElem.value = product["VENDOR SKU"] || defaultStr;
+      vendorNameElem.value = vendorName || defaultStr;
+
+      //set freight calculator drop downs
+      const {shipToStates, shippingMethods} = getVendorShippingDetails(vendorName, productCategory);
+      const frieghtShipLoopItems = [
+        {array: shipToStates, element: freightShipToSelectElem}, 
+        {array: shippingMethods, element: freightShipMethodSelectElem}
+        ];
+
+      frieghtShipLoopItems.forEach(ob => {
+        const {array, element} = ob;
+        if(array.length) {
+          array.forEach(item => {
+            const option = document.createElement("option");
+            option.value = item;
+            option.innerHTML = item;
+            option.id = item;
+            option.classList.add("gothica1-light-charade-light");
+
+            element.appendChild(option);
+          })
+        }
+      })
+    
+      //set the vendor unit of measure in the "PRICE" table
+      const showroomUnitOfMeasure = amount => {
+      const unitOfMeasure = product["QTY SHOWROOM UNIT OF MEASURE"] || "?";
+
+        if (amount) {
+          if (amount !== 1) {
+            return `${unitOfMeasure}S`
+          }
+          return `${unitOfMeasure}`
+        } else {
+          if(unitOfMeasure.indexOf("FOOT") > -1) return unitOfMeasure
+          else return `${unitOfMeasure}(S)`;
+        }
+      }
+
+      const vendorUnitOfMeasure = amount => {
+      const unitOfMeasure = product["QTY VENDOR UNIT OF MEASURE"] || "?";
+
+        if (amount) {
+          if (amount !== 1) {
+            return `${unitOfMeasure}S`
+          }
+          return `${unitOfMeasure}`
+        } else {
+        if(unitOfMeasure.indexOf("FOOT") > -1) return unitOfMeasure
+        else return `${unitOfMeasure}(S)`;
+
+        }
+      }
+
+      vendorUnitOfMeasureElem.innerHTML = showroomUnitOfMeasure();
+      priceUnitOfMeasureElem.innerHTML = showroomUnitOfMeasure();
+      vendorUnitOfMeasureElem2.innerHTML = vendorUnitOfMeasure();
+
+      //now set the currency and amount in the "PRICE" table
+      let vendorCurrency = product["VENDOR CURRENCY"] || "";
+      let showroomCurrency = product["SHOWROOM CURRENCY"];
+      let productPrice = product["SHOWROOM COST VENDOR CURRENCY"];
+      productPrice = Number(productPrice) % 1 == 0 ? productPrice : Number(productPrice).toFixed(2);
+
+      let priceType = destinationsObject["item-lookup-page"].priceType;
+      let designerProductPrice = priceType == "NET" ? product["DESIGNER NET PRICE SHOWROOM CURRENCY"] : product["RETAIL PRICE SHOWROOM CURENCY"];
+      designerProductPrice = Number(designerProductPrice) % 1 == 0 ? designerProductPrice : Number(designerProductPrice).toFixed(2);
+      
+      itemUnitPerMeasureElem.innerHTML = `${vendorCurrency}${productPrice}`;
+      itemUnitPerMeasurePriceElem.innerHTML = `${showroomCurrency}${designerProductPrice}`;
+
+      let status = product["STATUS"] || defaultStr;
+      statusElem.innerHTML = status;
+      //red
+      if(status == "ARCHIVED") statusElem.style.color = "#FF0000"
+      //green
+      else if(status == "ACTIVE") statusElem.style.color = "#008000"
+      //black
+      else statusElem.style.color = "#000000";
+
+      let content = product["CONTENT"] || defaultStr;
+      contentElem.innerHTML = content;
+
+      let cutFeeMin = product["CUT FEE MINIMUM QTY"];
+      let cutFeeUnderMinCharge = product["CUT FEE SHOWROOM CURRENCY"];
+      let cutFee = Number(cutFeeMin) > 0 ? `${showroomCurrency}${cutFeeUnderMinCharge} IF UNDER ${cutFeeMin} ${showroomUnitOfMeasure(cutFeeMin)}` : defaultStr;
+      cutFeeElem.innerHTML = cutFee;
+
+      let repeat = product["REPEAT (AUTO-GENERATED)"] || defaultStr;
+      repeatElem.innerHTML = repeat;
+
+      /** SET UP FEE LOGIC GOES HERE (cf cut fee (maybe?)) */
+      let setupFeeMin = product["SETUP FEE MINIMUM QTY"];
+      let setupFeeUnderMinCharge = product["SETUP FEE SHOWROOM CURRENCY"];
+      let setupFee = Number(setupFeeMin) > 0 ?
+        `${showroomCurrency}${setupFeeUnderMinCharge} IF UNDER ${setupFeeMin} ${showroomUnitOfMeasure(setupFeeMin)}` :
+        defaultStr;
+      setupFeeElem.innerHTML = setupFee;
+
+      let width = product["SIZE (AUTO-GENERATED)"] || defaultStr;
+      widthElem.innerHTML = width;
+
+      let absoluteMinQty = Number(product["MINIMUM ORDER QTY"])
+      let absoluteMin = `${absoluteMinQty} ${showroomUnitOfMeasure(absoluteMinQty)}` || defaultStr;
+      absoluteMinElem.innerHTML = absoluteMin;
+      
+      let stockedPrinted = product["STOCKED/PRINT-TO-ORDER"] || defaultStr;
+      stockedPrintedElem.innerHTML = stockedPrinted;
+
+      let maxPieceSize = product["MAX PIECE SIZE"] || defaultStr;
+      maxPieceSizeElem.innerHTML = maxPieceSize;        
+
+      let outOfStock = product["OUT-OF-STOCK LEAD TIME"] || defaultStr;
+      outOfStockElem.innerHTML = outOfStock;
+
+      /** CFA LOGIC GOES HERE */
+      let cfa = defaultStr
+      const cfaOffered = product['CFA OFFERED']
+      if (cfaOffered.toLowerCase() === 'yes') {
+        cfa = 'Yes'
+        const cfaDefault = product['CFA DEFAULT']
+        if (cfaDefault.toLowerCase() === 'yes') {
+          cfa += '; sent by default'
+        } else {
+          cfa += '; sent upon request'
+          const cfaMinQty = Number(product['CFA MINIMUM QTY'])
+          const cfaFeeMinQty = Number(product['CFA FEE MINIMUM QTY'])
+          if (cfaMinQty) {
+            cfa += ` for orders above ${cfaMinQty} ${showroomUnitOfMeasure(cfaMinQty).toLowerCase()}`
+            const cfaShowRoomCharge = product['CFA FEE SHOWROOM CURRENCY']
+            if (cfaShowRoomCharge) {
+              cfa += ` and ${showroomCurrency}${cfaShowRoomCharge} CFA fee applies`
+            }
+          } else if (cfaFeeMinQty) {
+            const cfaShowRoomCharge = product['CFA FEE SHOWROOM CURRENCY']
+            cfa += ` with a CFA fee of ${showroomCurrency}${cfaShowRoomCharge} for orders below ${cfaFeeMinQty} ${showroomUnitOfMeasure(cfaFeeMinQty).toLowerCase()}`
+          }
+        }
+      } else if (cfaOffered.toLowerCase() === 'no') {
+        cfa = 'No'
+      }
+      cfaElem.innerHTML = cfa
+
+      /** RUSH FEE LOGIC GOES HERE */
+      let rushFeePrice = product["RUSH FEE"];
+      let rushFeeLeadTime = product["RUSH FEE APPROXIMATE LEAD TIME"]
+      let rushFee = Number(rushFeePrice) > 0 ?
+        `${showroomCurrency}${rushFeePrice} with an approx. lead time of ${rushFeeLeadTime.toLowerCase()}` :
+        defaultStr;
+      rushFeeElem.innerHTML = rushFee
+
+      let notes = product["NOTES TO CONSIDER"] || defaultStr;
+      notes = notes.replace(/\n/g, "<br>");
+      notesElem.innerHTML = notes;
+
+      break
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+/********************************* CONFIGURE ITEM LOOKUP PAGE **************************************************/
+function configureItemLookupPage(){
+  const itemNameElement = document.getElementById("options-list-1");
+  // const itemNameElement = document.getElementById("pattern-name-1");
+
+  google.script.run
+    .withSuccessHandler(handleLoadPageSuccess)
+    .loadPage(["products", "freightCalculationTable"]);
+    
+  moveAdditionalFeeBorder();
+
+  function handleLoadPageSuccess(response) {
+    //in succession, load up the drop down menus on the page top to bottom
+    const { products, freightCalculationTable } = JSON.parse(response);
+
+    console.log('products', products)
+
+    Object.assign(destinationsObject["item-lookup-page"], { products, freightCalculationTable });
+    document.getElementById("pattern-name-1").placeholder = "Search here";
+
+    //run pattern names next for elem id of "item-to-lookup"
+    const addedPatternNames = [];
+    for (let p in products) {
+      let patternName = products[p]["PATTERN/CATEGORY"];
+
+      if(addedPatternNames.includes(patternName)) continue;
+
+      let option = document.createElement("li");
+      option.value = patternName;
+      // option.innerHTML = patternName;
+      option.onclick = () => {optionListSelection(option); patternSelectorChange(option)}
+      option.textContent = patternName;
+      option.id = patternName;
+      option.classList.add("gothica1-light-charade-light");
+
+      itemNameElement.appendChild(option);
+      addedPatternNames.push(patternName);
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>

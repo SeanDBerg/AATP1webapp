@@ -1,0 +1,2687 @@
+<!-- 
+  To do:
+  26) Sample section
+    26a) How the quantity input should work
+    26b) How the values should be put in/pulled from the spreadsheets (add the new columns to the product database)
+  27) Clean up the fillInputsForTesting function by making it choose more realistic values for the fields
+
+  Ongoing:
+  10) Talk to Morgan about cleaning up the database
+    10a) Changing formatting and headers
+    10b) Making sure that all rows have all the required information (If not, then duplications can happen as the data seems "new" once the required info is added via the portal)
+    10c) Making sure that the values match those in the Data Validation page (e.g., Square Foot versus SQ FOOT)
+  5) Set values of other columns, e.g., "Combined" columns
+
+  Done:
+  1) Check formatting of entries in spreadsheet and rugPageState
+  2) Check why submitting the same data twice in create doesn't get stopped (has to do with comparing sample objects, but I need to first figure out number 4 below)
+  4) Some of the samples added to the sample database do not have total quantities
+  3) Headers that are supposed to be ignored are showing up in the new data returned from the back end
+  6) Fix "Clear" header button
+  7) Debug duplication of sample sections
+  12) Fix launch date timezone issue: 4/29/2024 in the form, but 4/28/2024 in the database
+  8) Redo autofillRugForm
+    8a) Convert the launch date to ISO (check how this works with (12))
+    8b) Make the right hand side info update
+    8c) Disable the warning about duplicate skus that goes off at the beginning
+    8d) Figure out why filled sections are being closed
+    8e) On Design Manager and On Website radio buttons
+  11) Make it so that when a new row is created, it's sku and batch codes are added to the popup form 
+  9) Figure out how Sample Name Version Info works (by asking Morgan) and then do all the stuff related to it
+    9a) Clone mode and Edit mode
+    9b) getRugFormValues
+  18) Add scroll effect to left hand side
+  13) Make it so that the right hand side divs update during cloning after a change
+  19) Figure out why On Design Manager and On Website aren't being added to the database
+  15) Edit mode
+    15a) Figure out what needs to be returned
+    15b) When gathering the sample information, we only need to update the sample database if the samples have changed, so it might be worth it to compare the formvalues with the values that were used to fill the form before editing to detect changes.
+  17) Fix positioning of the right hand side div so that tall photos don't overflow into the content
+  24) When a repeated sku is entered during create mode, the unique sample batch code should also be erased
+  16) First 'on-loan' input in create mode: should it be set to zero? I want to ask him again how he wants those three sections to work in the different modes
+  22) Figure out why changing mill name in clone mode doesn't update the sku and batch
+  23) Figure out why changing something in clone mode then changing it back gives bad values for the sku and batch
+  24) Add asterisks for required fields
+  25) Get rid of inventory adjustment section
+  28) Use PropertiesService.getScriptProperties() to get/set version numbers for the spreadsheets. Hopefully this is faster than checking the spreadsheet's metadata?
+-->
+
+<script>
+  // State
+  const rugPageState = {
+    mode: null,
+    data: {
+      dropdownVals: null,
+      sampleRows: null,
+      productRows: null,
+      codes: null,
+    },
+    primaryImageNum: null,
+    startingData: null,
+    startingDataChanges: null,
+    listenForBatchIncrement: null,
+    batchHasIncremented: null,
+    lastDataRefresh: null,
+    versionNumbers: {
+      product: null,
+      sample: null,
+      dropdownVals: null,
+    }
+  }
+  const headerButtonDelay = 2000;
+  const shortDelay = 3000;
+  const longDelay = 8000;
+
+  // For testing
+  function logState() {
+    console.log(rugPageState);
+  }
+
+  function toggleIcon() {
+    const icon = document.getElementById('toggle-loading-icon');
+    if (icon.classList.contains('visually-hidden')) {
+      icon.classList.remove('visually-hidden');
+    } else {
+      icon.classList.add('visually-hidden');
+    }
+  }
+
+  function fillInputsForTesting() {
+    addAllDuplicatedSections();
+
+    const availableSampleSizes = ['1x1 Sample', '2x2 Sample', '6x6 Sample', '13x18 Sample', '18x24 Sample', '2x3 Sample', '2x4 Sample', '9x9 Sample', '14x14 Sample', '18x18 Sample', '2x1 Sample', '6x12 Sample', '6.5x7 Sample', 'Cutting', '9x13 Sample', '26x17.5 Sample', '18x54 Sample'];
+    const allRugFormInputs = document.querySelectorAll('.form-input');
+
+    // console.log('all rug form inputs:')
+    // console.log(allRugFormInputs);
+
+    let millNameFilled = false;
+    let prodCatFilled = false;
+    allRugFormInputs.forEach(inputEl => {
+      const reasonsToSkip = [
+        inputEl.id === 'batch-code',
+        // !inputEl.checkVisibility(),
+        inputEl.id.includes('image'),
+        inputEl.id.includes('sample-name'),
+        // inputEl.id.includes('adjustment-sample-size')
+      ];
+      const skipThisInput = reasonsToSkip.some(val => val);
+      if (skipThisInput) return;
+
+      if (inputEl.id === 'temple-sku') {
+        const randNum = Math.max(1, Math.floor(100 * Math.random()));
+        inputEl.value = `XXYY-WWZZ${String(randNum).padStart(2, '0')}`;
+        handleSkuChange();
+        return;
+      }
+
+      if (inputEl.id.includes('sample-size')) {
+        const randIdx = Math.floor(availableSampleSizes.length * Math.random());
+        const size = availableSampleSizes[randIdx];
+        availableSampleSizes.splice(randIdx, 1);
+        
+        const sizeList = inputEl.parentNode.querySelector('ul');
+        const item = Array.from(sizeList.querySelectorAll('li'))
+          .find(listItem => listItem.textContent === size);
+
+        handleListItemClick(item);
+        handleSampleItemClick(item);
+        return;
+      }
+
+      if (inputEl.classList.contains('custom')) {
+        const listEl = inputEl.parentNode.querySelector('ul');
+        const allListItems = Array.from(listEl.querySelectorAll('li:not(.clear-selection):not(.template-li)'));
+        const allItemNames = allListItems.map(li => li.textContent);
+
+        const randomItemName = allItemNames[Math.floor(allItemNames.length * Math.random())];
+        inputEl.value = randomItemName;
+
+        return;
+      }
+
+      if (inputEl.id === 'product-category') {
+        inputEl.value = Math.random() > 0.5 ? 'Broadloom' : 'Custom';
+        return;
+      }
+
+      if (inputEl.type === 'date') {
+        inputEl.value = '2024-04-29';
+        return;
+      }
+
+      if (inputEl.type === 'radio') {
+        const name = inputEl.name;
+        const radioGroup = Array.from(document.querySelectorAll(`input[type="radio"][name="${name}"]`));
+
+        const alreadyChecked = radioGroup.some(radBtn => radBtn.checked);
+        if (alreadyChecked) return;
+
+        const randRadioButton = radioGroup[Math.floor(Math.random() * radioGroup.length)];
+        randRadioButton.checked = true;
+        return;
+      }
+
+      inputEl.value = Math.floor(Math.random() * 100);
+    });
+
+    handleSnviChange();
+    removeAllDuplicatedSections(removeFilled = false);
+    handleMillNameChange().catch(err => {
+      throw err;
+    });
+  }
+
+  /**
+   * *******************************************************
+   * ***************** SET UP AND CLEAN UP *****************
+   * *******************************************************
+   */
+  async function configureRugProductEntry(initialMode) {
+    // Clear the rug form
+    clearRugForm();
+
+    // Display the loading overlay
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    loadingOverlay.style.display = 'block';
+
+    // Set the initial mode toggle switch (in base.html)
+    const initModeRadioButton = document.getElementById(`${initialMode}-radio`);
+    initModeRadioButton.checked = true;
+    rugPageState.mode = initialMode;
+
+    // Reveal the header buttons (in base.html)
+    const buttonsDiv = document.getElementById('rug-product-entry-buttons-group');
+    buttonsDiv.style.display = 'flex';
+
+    // Remove form submission via the Enter key
+    const rugForm = document.getElementById('rug-form');
+    rugForm.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+      }
+    });
+
+    // Add scrolling effect to left side navbar
+    attachScrollListenerToNavbar();
+
+
+    // Get the values for the form dropdowns and fill them
+    console.log('starting data load');
+    try {
+      await loadDropdownVals();
+      // document.addEventListener('click', hideOpenDropdowns);
+    } catch(error) {
+      throw error;
+    }
+    fillRugFormDropdowns();
+
+    // Get the rug database info and store it in rugPageState
+    try {
+      await loadRugData();
+      
+    } catch(error) {
+      throw error;
+    }
+    fillEntryModeModalDropdowns();
+    rugPageState.lastDataRefresh = String(new Date().getTime());
+
+    // Activate the header buttons
+    const headerButtons = buttonsDiv.querySelectorAll('.rug-header-button');
+    headerButtons.forEach(buttonEl => buttonEl.disabled = false);
+
+    // Initialize the form based on the chosen mode
+    loadingOverlay.style.display = 'none';
+    if (initialMode === 'create') {
+      initializeCreateMode();
+    } else {
+      const selectedCodes = {};
+      try {
+        const userChoice = await openEntryModeModal(initialMode);
+        Object.assign(selectedCodes, userChoice);
+      } catch(error) {
+        throw error;
+      }
+
+      autofillRugForm(selectedCodes.sku, selectedCodes.batch);
+
+      if (initialMode === 'edit') {
+        initializeEditMode();
+      } else if (initialMode === 'clone') {
+        initializeCloneMode();
+      }
+    }
+
+    // Reveal the close button in the entry mode modal
+    const entryModeModal = document.getElementById('entryModeModal');
+    const closeButton = entryModeModal.querySelector('span.close-modal');
+    closeButton.classList.remove('visually-hidden');
+
+    // Log the rugPageState while testing
+    console.log('rug page state')
+    console.log(rugPageState);
+
+    // Fill all inputs for testing
+    // fillInputsForTesting();
+  }
+
+  function deconstructRugProductEntry() {
+    const buttonsDiv = document.getElementById('rug-product-entry-buttons-group');
+    buttonsDiv.style.display = 'none';
+  }
+
+  function attachScrollListenerToNavbar() {
+    const itemPhotoHeader = document.getElementById(('item-photo-header'));
+    const navBarSectionsMaps = [
+      {
+        navTitle: 'Product Details',
+        sectionId: 'product-details-section'
+      },
+      {
+        navTitle: 'Pricing',
+        sectionId: 'pricing-section'
+      },
+
+      {
+        navTitle: 'Photography/Web',
+        sectionId: 'photograph-web-section'
+      },
+      {
+        navTitle: 'Sampling',
+        sectionId: 'sampling-section'
+      },
+      {
+        navTitle: 'Style Categories',
+        sectionId: 'style-categories-section'
+      },
+      {
+        navTitle: 'Miscellaneous',
+        sectionId: 'miscellaneous-section'
+      }
+    ];
+
+    window.addEventListener('scroll', e => {
+      // Do nothing if the page hasn't been scrolled
+      if (window.scrollY === 0) return;
+
+      // Calculate the current position of the Item Photo Header element
+      const itemPhotoHeaderTop = itemPhotoHeader.getBoundingClientRect().top;
+      
+      // Find the section currently in view
+      const inViewSection = {};
+      for (const sectionInfo of navBarSectionsMaps) {
+        const sectionHeader = document.getElementById(sectionInfo.sectionId);
+        const sectionHeaderTop = sectionHeader.getBoundingClientRect().top;
+        
+        if (sectionHeaderTop < itemPhotoHeaderTop) {
+          // console.log('in view section');
+          // console.log(sectionInfo.navTitle);
+          Object.assign(inViewSection, sectionInfo);
+        } else {
+          break;
+        }
+      }
+      if (!inViewSection.navTitle) {
+        // console.warn('No section currently in view, which shouldn\'t happen. Review the function "attachScrollListenerToNavbar" to see how the current section is NOT in view.')
+        return;
+      }
+
+      // Remove formatting from all headers in the navbar
+      const navbarHeaders = Array.from(document.getElementById('left-side-nav').querySelectorAll('div'));
+      navbarHeaders.forEach(headerDiv => {
+        headerDiv.classList.remove('nav-header-selected');
+        headerDiv.classList.add('nav-header-unselected');
+      });
+      
+      // Highlight the section currently in view
+      const notFullyScrolled = window.innerHeight + window.scrollY < document.documentElement.scrollHeight;
+      if (notFullyScrolled) {
+        const inViewNavHeader = navbarHeaders.find(
+          headerDiv => headerDiv.innerText === inViewSection.navTitle
+        );
+        inViewNavHeader.classList.remove('nav-header-unselected');
+        inViewNavHeader.classList.add('nav-header-selected');
+      } else {
+        const lastHeaderDiv = navbarHeaders.pop();
+        lastHeaderDiv.classList.remove('nav-header-unselected');
+        lastHeaderDiv.classList.add('nav-header-selected');
+      }
+    });
+  }
+
+  function autofillRugForm(sku, batch) {
+    clearRugForm();
+    addAllDuplicatedSections();
+
+    if (!Object.hasOwn(rugPageState.data.productRows, sku)) {
+      console.log('cannot find sku in rugPageState:')
+      console.log('sku', sku);
+      console.log('rugPageState', rugPageState.data.productRows);
+      return;
+    }
+    if (!Object.hasOwn(rugPageState.data.productRows[sku], batch)) {
+      console.log('cannot find batch in rugPageState:')
+      console.log('batch', batch);
+      console.log('rugPageState', rugPageState.data.productRows[sku]);
+      return;
+    }
+    const startingData = rugPageState.data.productRows[sku][batch].fullRow;
+    
+    // Update the right hand side values
+    const rightSideSkuDiv = document.getElementById('right-side-temple-sku');
+    const rightSideBatchDiv = document.getElementById('right-side-batch-code');
+    const rightSideSampleNameVersionInfoDiv = document.getElementById('right-side-sample-name-version-info')
+    rightSideSkuDiv.textContent = startingData['Temple SKU/DM Code'];
+    rightSideBatchDiv.textContent = startingData['Unique Sample Batch Code'];
+    rightSideSampleNameVersionInfoDiv.textContent = generateSnviText(startingData);
+
+    const allFormInputs = document.querySelectorAll('.form-input:not(.sample-input)');
+    allFormInputs.forEach(inputEl => {
+      const name = inputEl.name;
+      const id = inputEl.id;
+
+      const reasonsToSkip = [
+        !name,
+        name === 'Mill Name',
+        rugPageState.mode === 'clone' && (name.includes('Image') || id.includes('color-')),
+        !(Object.hasOwn(startingData, name)),
+        !startingData[name],
+      ]
+      if (reasonsToSkip.some(reason => reason)) return;
+
+      const val = startingData[name];
+      if (name === 'Launch Date') {
+        const [month, day, year] = val.split('/');
+        const cleanDate = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+        inputEl.value = cleanDate;
+      } else if (name === 'On Website' || name === 'On Design Manager') {
+        const radioValue = id.split('-').pop();
+        if (val === radioValue) {
+          inputEl.checked = true;
+        }
+      } else if (name.includes('Image Name')) {
+        const imageSectionNum = id.split('-').pop();
+        console.log(`setting open drive button for section ${imageSectionNum}`);
+        const openDriveButton = document.getElementById(`open-drive-${imageSectionNum}`);
+
+        openDriveButton.textContent = val;
+        inputEl.value = val;
+      } else {
+        inputEl.value = val;
+      }
+    });
+
+    // Fill in the mill name input and update the photo sections
+    new Promise((resolve, reject) => {
+      const millNameInput = document.getElementById('mill-name');
+      const millName = startingData['Mill Name'];
+      millNameInput.value = millName;
+
+      try {
+        fillSelectImageModal(millName);
+        resolve();
+      } catch(error) {
+        reject(error)
+      }
+    }).then(() => {
+      // Only fill in the photo and sample sections if editing 
+      if (rugPageState.mode === 'edit') {
+        // Check the appropriate primary image radio button and update the item photo display
+        const primaryImageRadioButtons = document.querySelectorAll('input[name="Primary Image"]');
+        for (const radBtn of primaryImageRadioButtons) {
+          const imageSectionNum = radBtn.closest('tbody').id.split('-').pop();
+          const key = `Primary Image ${imageSectionNum}`;
+          if (startingData[key] === 'Yes') {
+            radBtn.checked = true;
+            updateItemPhotoDisplay(radBtn);
+            break;
+          }
+        }
+
+        const headerToIdMap = {
+          'Complete Sample Item Name': 'sample-name',
+          'Size': 'sample-size',
+          'Quantity Total': 'quantity',
+          'Quantity On Loan': 'on-loan',
+          'Quantity On Hand': 'on-hand'
+        }
+        const rugSamples = rugPageState.data.productRows[sku][batch].samples;
+        rugSamples.forEach((sampleObj, idx) => {
+          const sampleNum = idx + 1;
+          for (const databaseName in headerToIdMap) {
+            const inputId = `${headerToIdMap[databaseName]}-${sampleNum}`;
+            const inputEl = document.getElementById(inputId);
+            inputEl.value = sampleObj[databaseName];
+          }
+        });
+      }
+
+      removeAllDuplicatedSections(removeFilled = false);
+    });
+  }
+
+  function generateSnviText(rugInfo) {
+    const productCategory = rugInfo['Product Category'];
+    const snviWords = [
+      rugInfo['Misc. Item Reference'],
+      rugInfo['Version Number']
+    ].filter(val => val);
+
+    if (productCategory === 'Broadloom') {
+      const snviText = snviWords.join(' ');
+      return snviText ? snviText : '--';
+    } 
+    
+    else if (productCategory === 'Custom') {
+      const extendedWords = [
+        rugInfo['Mill Design Number 1'],
+        rugInfo['Mill Colorway Number'],
+        ...snviWords
+      ].filter(val => val);
+      const snviText = extendedWords.join(' ');
+      return snviText ? snviText : '--';
+    }
+  }
+
+  /**
+   * *******************************************************
+   * ************** VERSION NUMBER MANAGEMENT **************
+   * *******************************************************
+   */
+  function getLatestVersionNumber(sheetName) {
+    return new Promise((resolve, reject) => {
+      google.script.run
+        .withFailureHandler(error => reject(handleFailure(error)))
+        .withSuccessHandler(versionNum => resolve(handleSuccess(versionNum)))
+        .getSheetVersionNumber(sheetName);
+    });
+
+    function handleFailure(error) {
+      console.log('error with calling getSheetVersionNumber:')
+      console.log(error);
+    }
+
+    function handleSuccess(versionNum) {
+      // console.log('received this version number from google:')
+      // console.log(versionNum)
+      return Number(versionNum);
+    }
+  }
+
+  async function savedVersionNumIsCurrent(sheetName) {
+    const nameKeyMap = {
+      'RUG PRODUCT DATABASE': 'product',
+      'RUG SAMPLE DATABASE': 'sample',
+      'DATA VALIDATION DIRECTORY': 'dropdownVals',
+    }
+    const savedVerNum = Number(rugPageState.versionNumbers[nameKeyMap[sheetName]]);
+    // console.log('saved version number:', savedVerNum);
+    if (!savedVerNum) return false;
+
+    try {
+      const latestVerNum = await getLatestVersionNumber(sheetName);
+      // console.log('latest version number:', latestVerNum);
+      // console.log('are they equal?', savedVerNum === latestVerNum)
+      return savedVerNum === latestVerNum;
+    } catch(err) {
+      // console.log('error with get latest version number:')
+      // console.log(err);
+      // return;
+      throw err
+    }
+  }
+
+  // async function speedTest() {
+  //   const startTime = new Date().getTime();
+  //   console.log('starting speedTest');
+
+  //   for (const sheetName of ['RUG PRODUCT DATABASE', 'RUG SAMPLE DATABASE']) {
+  //     await savedVersionNumIsCurrent(sheetName)
+  //   }
+
+  //   const duration = new Date().getTime() - startTime;
+  //   console.log('duration:', duration)
+  // }
+
+  function fetchLastUpdatedTime() {
+    return new Promise((resolve, reject) => {
+      google.script.run
+        .withFailureHandler(error => reject(error))
+        .withSuccessHandler(lastUpdated => resolve(Number(lastUpdated)))
+        .getLastUpdatedTime()
+    });
+  }
+
+  async function savedDataIsStale() {
+    const lastRefreshString = rugPageState.lastDataRefresh;
+    if (!lastRefreshString) {
+      console.log('nothing stored for lastDataRefresh, so data is stale')
+      return true;
+    }
+
+    const lastRefresh = Number(lastRefreshString);
+    try {
+      const lastUpdated = await fetchLastUpdatedTime();
+
+      if (lastRefresh < lastUpdated) {
+        console.log('server data was updated, data is stale')
+        return true;
+      } else {
+        console.log('data is up to date');
+        return false;
+      }
+
+      // return lastRefresh < lastUpdated;
+    } catch(err) {
+      throw err
+    }
+  }
+  
+  // async function allVersionNumsAreCurrent() {
+  //   const allSheetNames = [
+  //     'RUG PRODUCT DATABASE',
+  //     'RUG SAMPLE DATABASE',
+  //     'DATA VALIDATION DIRECTORY'
+  //   ];
+  //   for (const sheetName of allSheetNames) {
+  //     try {
+  //       const dataIsCurrent = await savedVersionNumIsCurrent(sheetName);
+  //       if (!dataIsCurrent) return false;
+  //     } catch(err) {
+  //       throw err;
+  //     }
+  //   }
+
+  //   return true;
+  // }
+  
+  /**
+   * *******************************************************
+   * *********** FETCH FROM DATABASE WHEN LOADING **********
+   * *******************************************************
+   */
+  async function loadDropdownVals() {
+    // Check if we have saved data
+    const savedVals = rugPageState.data.dropdownVals;
+    if (savedVals) {
+      
+      return;
+    }
+    // if (savedVals) {
+    //   try {
+    //     const isCurrent = await savedVersionNumIsCurrent('DATA VALIDATION DIRECTORY');
+    //     if (isCurrent) return;
+    //   } catch(err) {
+    //     throw err;
+    //   }
+    // }
+
+    // Fetch the dropdown vals
+    try {
+      const serverVals = await getDropdownVals();
+      
+      rugPageState.data.dropdownVals = serverVals;
+      // rugPageState.versionNumbers.dropdownVals = versionNum;
+    } catch(error) {
+      throw error;
+    }
+  }
+
+  function getDropdownVals() {
+    return new Promise((resolve, reject) => {
+      google.script.run
+        .withFailureHandler(error => reject(error))
+        .withSuccessHandler(vals => resolve(JSON.parse(vals)))
+        .getRugDropdownValues();
+    });
+  }
+
+  async function loadRugData() {
+    // Check if we've already loaded the data
+    const savedCodes = rugPageState.data.codes;
+    const savedRows = rugPageState.data.productRows;
+    if (savedCodes && savedRows) {
+      try {
+        const dataIsStale = await savedDataIsStale();
+        if (!dataIsStale) return;
+      } catch(err) {
+        throw err
+      }
+    }
+  
+    // if (savedCodes && savedRows) {
+    //   // Check if our data is current
+    //   try {
+    //     const prodIsCurrent = await savedVersionNumIsCurrent('RUG PRODUCT DATABASE');
+    //     if (prodIsCurrent) {
+    //       const sampleIsCurrent = await savedVersionNumIsCurrent('RUG SAMPLE DATABASE');
+    //       if (sampleIsCurrent) return;
+    //     }
+    //   } catch(err) {
+    //     throw err;
+    //   }
+    // }
+
+    // Fetch the database info
+    try {
+      const serverData = await getRugData();
+
+      rugPageState.data.sampleRows = serverData.sampleRows;
+      rugPageState.data.productRows = serverData.productRows;
+      rugPageState.data.codes = serverData.codes;
+      rugPageState.lastDataRefresh = String(new Date().getTime());
+      // rugPageState.versionNumbers = {
+      //   ...rugPageState.versionNumbers,
+      //   product: serverData.versionNumbers.product,
+      //   sample: serverData.versionNumbers.sample
+      // }
+    } catch(error) {
+      throw error;
+    }
+  }
+
+  function getRugData() {
+    return new Promise((resolve, reject) => {
+      google.script.run
+        .withFailureHandler(error => reject(error))
+        .withSuccessHandler(data => resolve(JSON.parse(data)))
+        .getRugDatabaseInfo();
+    })
+  }
+
+  /**
+   * *******************************************************
+   * ******************* MODE WORKFLOWS ********************
+   * *******************************************************
+   */
+  document.addEventListener('DOMContentLoaded', () => {
+    const rugToggle = document.getElementById('rug-toggle');
+    rugToggle.addEventListener('change', handleRugToggle);
+  });
+
+  async function handleRugToggle(e) {
+    // console.log('rug toggle changed. displayed mode:')
+    // console.log(e.target);
+
+    if (!formIsEmpty()) {
+      const userChoice = await openWarningModal();
+      if (userChoice === 'cancel') {
+        const previousModeToggle = document.getElementById(`${rugPageState.mode}-radio`);
+        previousModeToggle.checked = true;
+        return;
+      } else {
+        clearRugForm();
+      }
+    }
+    
+    const oldMode = rugPageState.mode;
+    if (oldMode === 'create') {
+      terminateCreateMode();
+    } else if (oldMode === 'clone') {
+      terminateCloneMode();
+    } else if (oldMode === 'edit') {
+      terminateEditMode();
+    }
+
+    const newMode = e.target.id.split('-')[0];
+    rugPageState.mode = newMode;
+    if (newMode === 'create') {
+      initializeCreateMode();
+      return;
+    }
+
+    const toggleLoadingIcon = document.getElementById('toggle-loading-icon');
+    toggleLoadingIcon.classList.remove('visually-hidden');
+    let dataIsStale = false;
+    try {
+      dataIsStale = await savedDataIsStale();
+    } catch(err) {
+      throw err
+    }
+
+    if (dataIsStale) {
+      console.log('data is stale, refreshing...')
+      try {
+        const serverData = await getRugData();
+        rugPageState.data.sampleRows = serverData.sampleRows;
+        rugPageState.data.productRows = serverData.productRows;
+        rugPageState.data.codes = serverData.codes;
+        rugPageState.lastDataRefresh = String(new Date().getTime());
+      } catch(err) {
+        throw err
+      }
+
+      fillEntryModeModalDropdowns();
+    }
+
+    // const prodAndSampNames = [
+    //   'RUG PRODUCT DATABASE',
+    //   'RUG SAMPLE DATABASE'
+    // ];
+    // for (const sheetName of prodAndSampNames) {
+    //   try {
+    //     const thisDataIsCurrent = await savedVersionNumIsCurrent(sheetName);
+    //     dataIsCurrent = dataIsCurrent && thisDataIsCurrent;
+    //   } catch(err) {
+    //     console.log('error with savedVersionNumIsCurrent:')
+    //     console.log(err);
+    //     return;
+    //   }
+    // }
+    // if (!dataIsCurrent) {
+    //   console.log('data is stale, refreshing...')
+    //   try {
+    //     const serverData = await getRugData();
+
+    //     rugPageState.data.sampleRows = serverData.sampleRows;
+    //     rugPageState.data.productRows = serverData.productRows;
+    //     rugPageState.data.codes = serverData.codes;
+    //     rugPageState.versionNumbers = {
+    //       ...rugPageState.versionNumbers,
+    //       product: serverData.versionNumbers.product,
+    //       sample: serverData.versionNumbers.sample
+    //     }
+    //   } catch(err) {
+    //     console.log('error with getRugData:')
+    //     console.log(err);
+    //     return;
+    //   }
+
+    //   fillEntryModeModalDropdowns();
+    // }
+    console.log('data is current');
+    toggleLoadingIcon.classList.add('visually-hidden');
+
+    const selectedCodes = {};
+    try {
+      const userAction = await openEntryModeModal(newMode);
+      if (userAction === 'closed without submission') {
+        rugPageState.mode = 'create';
+        const createModeToggle = document.getElementById(`create-radio`);
+        createModeToggle.checked = true;
+        initializeCreateMode();
+        return;
+      }
+      Object.assign(selectedCodes, userAction);
+    } catch(error) {
+      console.log('error with openEntryModeModal:')
+      console.log(err);
+      return;
+    }
+
+    autofillRugForm(selectedCodes.sku, selectedCodes.batch);
+    
+    if (newMode === 'clone') {
+      initializeCloneMode();
+    } else if (newMode === 'edit') {
+      initializeEditMode();
+    }
+  }
+
+  function initializeCreateMode() {
+    // While testing, activate fill all fields button
+    const fillAllFields = document.getElementById('fill-all-button');
+    fillAllFields.disabled = false;
+
+    // Sku/DM code autofills Batch Code
+    const skuInput = document.getElementById('temple-sku');
+    skuInput.disabled = false;
+    skuInput.addEventListener('change', handleSkuChange);
+
+    // Enable design name input
+    const designNameInput = document.getElementById('design-name');
+    designNameInput.disabled = false;
+
+    // Set all on-loan inputs to 0
+    const allSampleInputs = document.querySelectorAll('.sample-input');
+    allSampleInputs.forEach(inputEl => {
+      if (inputEl.id.includes('on-loan')) {
+        inputEl.value = '0';
+      }
+    });
+  }
+
+  function terminateCreateMode() {
+    const fillAllFields = document.getElementById('fill-all-button');
+    fillAllFields.disabled = true;
+
+    const skuInput = document.getElementById('temple-sku');
+    skuInput.disabled = true;
+    skuInput.removeEventListener('change', handleSkuChange);
+
+    const designNameInput = document.getElementById('design-name');
+    designNameInput.disabled = true;
+
+    // const adjustTotalQuantityInputs = document.querySelectorAll('input[name="adjustment-quantity"]');
+    // adjustTotalQuantityInputs.forEach(inputEl => {
+    //   inputEl.disabled = false;
+    //   inputEl.style.cursor = 'pointer';
+    // });
+  }
+
+  function handleSkuChange() {
+    const skuInput = document.getElementById('temple-sku');
+    const rightSideSkuDiv = document.getElementById('right-side-temple-sku');
+    const batchInput = document.getElementById('batch-code');
+    const rightSideBatchDiv = document.getElementById('right-side-batch-code');
+
+    const sku = skuInput.value.toUpperCase();
+    if (!sku) {
+      rightSideSkuDiv.textContent = '--';
+      batchInput.value = '';
+      rightSideBatchDiv.textContent = '--';
+      return;
+    }
+
+    if (Object.hasOwn(rugPageState.data.codes, sku)) {
+      const errorText = skuInput.parentNode.querySelector('span.error-text');
+
+      skuInput.style.color = 'indianred';
+      errorText.style.display = 'inline';
+
+      setTimeout(() => {
+        skuInput.style.color = '';
+        skuInput.value = '';
+        batchInput.value = '';
+        errorText.style.display = '';
+      }, shortDelay);
+
+      return;
+    }
+
+    skuInput.value = sku;
+    rightSideSkuDiv.textContent = sku;
+    batchInput.value = `${sku}-001`;
+    rightSideBatchDiv.textContent = `${sku}-001`;
+  }
+
+  function initializeCloneMode() {
+    // -The field "Temple Design Name" should not be editable in clone or edit modes and should be read-only.
+
+    const colorwayInput = document.getElementById('colorway');
+    const skuInput = document.getElementById('temple-sku');
+    const batchInput = document.getElementById('batch-code');
+    const designNameInput = document.getElementById('design-name');
+
+    skuInput.disabled = true;
+    skuInput.style.cursor = 'default';
+    designNameInput.disabled = true;
+    designNameInput.style.cursor = 'default';
+
+    const startingSku = skuInput.value;
+    const startingBatch = batchInput.value;
+    rugPageState.startingData = rugPageState.data.productRows[startingSku][startingBatch]
+
+    rugPageState.startingDataChanges = {};
+    for (const key in rugPageState.startingData) {
+      if (key === 'fullRow') continue;
+      rugPageState.startingDataChanges[key] = false;
+      // False indicates this value hasn't changed
+    }
+    rugPageState.startingDataChanges.samples = [];
+    for (const sampleObj of rugPageState.startingData.samples) {
+      const copyObj = {}
+      for (const key in sampleObj) {
+        copyObj[key] = false;
+      }
+      rugPageState.startingDataChanges.samples.push(copyObj);
+    }
+    rugPageState.listenForBatchIncrement = true;
+    rugPageState.batchHasIncremented = false;
+
+    // Add event listeners for startingDataChanges here
+    document.querySelectorAll('.form-input').forEach(inputEl => {
+      inputEl.addEventListener('change', handleTrackChangingData);
+
+      if (inputEl.id === 'colorway') {
+        inputEl.addEventListener('change', handleColorwayChange);
+      } else {
+        inputEl.addEventListener('change', handleBatchIncrement);
+      }
+    });
+  }
+
+  function terminateCloneMode() {
+    const colorwayInput = document.getElementById('colorway');
+    const skuInput = document.getElementById('temple-sku');
+    const designNameInput = document.getElementById('design-name');
+
+    skuInput.disabled = false;
+    skuInput.style.cursor = '';
+    designNameInput.disabled = false;
+    designNameInput.style.cursor = '';
+
+    rugPageState.startingData = null;
+    rugPageState.startingDataChanges = null;
+    rugPageState.listenForBatchIncrement = null;
+    rugPageState.batchHasIncremented = null;
+
+    document.querySelectorAll('.form-input').forEach(inputEl => {
+      inputEl.removeEventListener('change', handleTrackChangingData);
+
+      if (inputEl.id === 'colorway') {
+        inputEl.removeEventListener('change', handleColorwayChange);
+      } else {
+        inputEl.removeEventListener('change', handleBatchIncrement);
+      }
+    });
+  }
+
+  function handleColorwayChange() {
+    const allSkuEls = [
+      document.getElementById('temple-sku'),
+      document.getElementById('right-side-temple-sku'),
+    ];
+    const allSkuBatchEls = [
+      ...allSkuEls,
+      document.getElementById('batch-code'),
+      document.getElementById('right-side-batch-code'),
+    ];
+    const startingSku = rugPageState.startingData['Temple SKU/DM Code'];
+    const colorwayInput = document.getElementById('colorway');
+
+    // Case 1: New colorway
+    const colorwayHasChanged = colorwayInput.value !== rugPageState.startingData['Temple Colorway Name'];
+    if (colorwayHasChanged) {
+      const skuLetters = startingSku.slice(0, -2);
+      const matchingSkuNums = Object.keys(rugPageState.data.codes).reduce(
+        (acc, curr) => {
+          if (curr.slice(0, -2) === skuLetters) {
+            acc.push(Number(curr.slice(-2)));
+          }
+          return acc;
+        },
+      []);
+      const nextSkuNum = String(Math.max(...matchingSkuNums) + 1).padStart(2, '0');
+
+      allSkuBatchEls.forEach(
+        el => animateNumberIncrease(el, skuLetters, nextSkuNum, '-001')
+      );
+
+      rugPageState.listenForBatchIncrement = false;
+
+      return;
+    }
+
+    // Case 2: Colorway is the same as the starting data
+    const startingBatch = rugPageState.startingData['Unique Sample Batch Code'];
+    allSkuBatchEls.forEach(el => {
+      el.style.fontWeight = 'bold';
+      const id = el.id;
+      if (id.includes('temple-sku')) {
+        if (id.includes('right-side')) {
+          el.textContent = startingSku;
+        } else {
+          el.value = startingSku;
+        }
+      } else if (id.includes('batch-code')) {
+        if (id.includes('right-side')) {
+          el.textContent = startingBatch;
+        } else {
+          el.value = startingBatch;
+        }
+      }
+    });
+    setTimeout(() => {
+      allSkuBatchEls.forEach(el => el.style.fontWeight = '');
+    }, shortDelay);
+
+    rugPageState.listenForBatchIncrement = true;
+    handleBatchIncrement();
+  }
+
+  function animateNumberIncrease(el, letters, skuNum, batchNum) {
+    // console.log(letters, number, newNumber);
+
+    el.style.fontWeight = 'bold';
+
+    const id = el.id;
+    if (id.includes('temple-sku')) {
+      if (id.includes('right-side')) {
+        el.textContent = letters + skuNum;
+      } else {
+        el.value = letters + skuNum;
+      }
+    } else if (id.includes('batch-code')) {
+      if (id.includes('right-side')) {
+        el.textContent = letters + skuNum + batchNum;
+      } else {
+        el.value = letters + skuNum + batchNum;
+      }
+    }
+
+    setTimeout(() => el.style.fontWeight = '', shortDelay);
+  }
+
+  function handleTrackChangingData(e) {
+    // When an input element changes value, we want to check if the new value is the same as the value in the starting data
+    // We'll track which values have changed in rugPageState.startingDataChanges
+
+    const inputEl = e.target;
+    const name = inputEl.name;
+    const id = inputEl.id;
+    const currentValue = inputEl.value;
+
+    // Sample inputs
+    if (inputEl.classList.contains('sample-input')) {
+      const inputIdWords = id.split('-');
+      const sampleObjIdx = Number(inputIdWords.pop()) - 1;
+      const generalId = inputIdWords.join('-');
+
+      const idToHeaderMap = {
+        'sample-name': 'Complete Sample Item Name',
+        'sample-size': 'Size',
+        'quantity': 'Quantity Total',
+        'on-loan': 'Quantity On Loan',
+        'on-hand': 'Quantity On Hand'
+      }
+      const sampleObjKey = idToHeaderMap[generalId];
+
+      const matchingSampleObject = rugPageState.startingData.samples[sampleObjIdx];
+      const startingValue = matchingSampleObject[sampleObjKey];
+
+      const valueHasChanged = startingValue !== currentValue;
+      rugPageState.startingDataChanges.samples[sampleObjIdx] = valueHasChanged;
+
+      console.log(rugPageState.startingDataChanges);
+      
+      return;
+    }
+
+    // Non sample inputs
+    const startingValue = rugPageState.startingData[name];
+    if (name === 'Launch Date') {
+      const [year, month, day] = currentValue.split('-');
+      const cleanDate = `${Number(moth)}/${Number(day)}/${year}`;
+      
+      const valueHasChanged = startingValue !== cleanDate;
+      rugPageState.startingDataChanges[name] = valueHasChanged;
+    } else if (name === 'On Website' || name === 'On Design Manager') {
+      const radioValue = id.split('-').pop();
+
+      const valueHasChanged = startingValue !== radioValue;
+      rugPageState.startingDataChanges[name] = valueHasChanged;
+    } else if (name === 'Primary Image') {
+      const imageSectionNum = inputEl.closest('tbody').id.split('-').pop();
+      const primaryImageKey = `Primary Image ${imageSectionNum}`;
+      const startingChoice = rugPageState.startingData[primaryImageKey];
+      const currentChoice = inputEl.checked ? 'Yes' : '';
+
+      const valueHasChanged = startingChoice !== currentChoice;
+      rugPageState.startingDataChanges[primaryImageKey] = valueHasChanged;
+    } else {
+      const valueHasChanged = startingValue !== currentValue;
+      rugPageState.startingDataChanges[name] = valueHasChanged;
+    }
+
+    console.log(rugPageState.startingDataChanges);
+  }
+
+  function dataHasChanged(toExclude = []) {
+    const skipThese = new Set(toExclude);
+    skipThese.add('fullRow');
+
+    for (const dataName in rugPageState.startingDataChanges) {
+      if (skipThese.has(dataName)) {
+        console.log('skipping', dataName);
+        continue;
+      }
+
+      if (dataName === 'samples') {
+        for (const sampleObj of rugPageState.startingDataChanges.samples) {
+          for (const sampleDataName in sampleObj) {
+            if (sampleObj[sampleDataName]) {
+              console.log('sample data has changed:')
+              console.log(sampleDataName);
+              return true;
+            }
+          }
+        }
+        continue;
+      }
+
+      if (rugPageState.startingDataChanges[dataName]) {
+        console.log('data has changed:')
+        console.log(dataName);
+        return true;
+      }
+    }
+
+    console.log('data has not changed')
+    return false;
+  }
+
+  function handleBatchIncrement() {
+    console.log('START BATCH INCREMENT')
+
+    if (!rugPageState.listenForBatchIncrement) {
+      console.log('not listening');
+      return;
+    }
+
+    const skuInput = document.getElementById('temple-sku');
+    const batchInput = document.getElementById('batch-code');
+    const rightSideBatchDiv = document.getElementById('right-side-batch-code');
+
+    const allBatchInputs = [batchInput, rightSideBatchDiv];
+    const namesToExclude = ['Unique Sample Batch Code'];
+    if (!dataHasChanged(namesToExclude)) {
+      const startingBatch = rugPageState.startingData["Unique Sample Batch Code"];
+      allBatchInputs.forEach(el => {
+        el.style.fontWeight = 'bold';
+        if (el.id.includes('right-side')) {
+          el.textContent = startingBatch;
+        } else {
+          el.value = startingBatch;
+        }
+      });
+
+      rugPageState.batchHasIncremented = false;
+
+      setTimeout(() => allBatchInputs.forEach(el => el.style.fontWeight = ''), shortDelay);
+    }
+    
+    else if (!rugPageState.batchHasIncremented) {
+      console.log('batch has not been incremented');
+
+      const skuLetters = skuInput.value.slice(0, -2);
+      const skuNum = skuInput.value.slice(-2);
+      const batchNum = batchInput.value.slice(-3);
+      const nextBatchNum = '-' + String(Number(batchNum) + 1).padStart(3, '0');
+
+      allBatchInputs.forEach(el => animateNumberIncrease(el, skuLetters, skuNum, nextBatchNum));
+
+      rugPageState.batchHasIncremented = true;
+    }
+
+    else {
+      console.log('fall through');
+    }
+  }
+
+  function initializeEditMode() {
+    const skuInput = document.getElementById('temple-sku');
+    const designNameInput = document.getElementById('design-name');
+
+    skuInput.disabled = true;
+    skuInput.style.cursor = 'default';
+    designNameInput.disabled = true;
+    designNameInput.style.cursor = 'default';
+  }
+
+  function terminateEditMode() {
+    const skuInput = document.getElementById('temple-sku');
+    const designNameInput = document.getElementById('design-name');
+
+    skuInput.disabled = false;
+    skuInput.style.cursor = '';
+    designNameInput.disabled = false;
+    designNameInput.style.cursor = '';
+  }
+
+  /**
+   * *******************************************************
+   * ******************* FORM SUBMISSION *******************
+   * *******************************************************
+   */
+  document.addEventListener('DOMContentLoaded', function(e) {
+    /** 
+     * Event listener for saving the form values
+    */
+    const rugHeaderButtonGroup = document.getElementById('rug-product-entry-buttons-group');
+    const saveButton = rugHeaderButtonGroup.querySelector('button.save-btn');
+    saveButton.addEventListener('click', async function(e) {
+      // Change save button appearance
+      saveButton.disabled = true;
+      saveButton.textContent = 'SAVING...';
+      saveButton.style.filter = 'invert(100%)';
+
+      // Validate form
+      const formIsValid = validateForm();
+      if (!formIsValid) {
+        saveButton.textContent = 'MISSING/INVALID';
+        setTimeout(() => {
+          saveButton.disabled = false;
+          saveButton.textContent = 'SAVE';
+          saveButton.style.filter = '';
+        }, headerButtonDelay);
+        return;
+      }
+
+      // Check if form data is already in rugPageState
+      const rugFormValues = getRugFormValues();
+      if (!checkIfDataIsNew(rugFormValues)) {
+        saveButton.textContent = 'DUPLICATE DATA';
+        setTimeout(() => {
+          saveButton.disabled = false;
+          saveButton.textContent = 'SAVE';
+          saveButton.style.filter = '';
+        }, headerButtonDelay);
+        return;
+      }
+
+      // Attempt form submission
+      const newData = {};
+      try {
+        const response = await submitRugForm(rugFormValues);
+        Object.assign(newData, response);
+      } catch(error) {
+        throw error;
+      }
+
+      // To do: Add/update data stored in rugPageState
+      updateRugPageState(newData);
+      // console.log('new data', newData);
+      // console.log('page state', rugPageState);
+
+      // Reset save button appearance based on submission outcome
+      saveButton.textContent = 'SAVED';
+      setTimeout(() => {
+        saveButton.disabled = false;
+        saveButton.textContent = 'SAVE';
+        saveButton.style.filter = '';
+      }, headerButtonDelay);
+    });
+
+    /** 
+     * Event listener for clearing the form values
+    */
+    const clearButton = rugHeaderButtonGroup.querySelector('button.clear-btn');
+    clearButton.addEventListener('click', function (e) {
+      const clearButton = e.target;
+      clearButton.textContent = 'CLEARING...';
+      clearButton.style.filter = 'invert(100%)';
+      
+      clearRugForm();
+
+      if (rugPageState.mode !== 'create') {
+        if (rugPageState.mode === 'edit') {
+          console.log('was editing');
+          terminateEditMode();
+        } else if (rugPageState.mode === 'clone') {
+          console.log('was cloning');
+          terminateCloneMode();
+        }
+        rugPageState.mode = 'create';
+        initializeCreateMode();
+        const createModeToggle = document.getElementById('create-radio');
+        createModeToggle.checked = true;
+      }
+
+      clearButton.textContent = 'CLEARED';
+      setTimeout(() => {
+        clearButton.textContent = 'CLEAR';
+        clearButton.style.filter = '';
+      }, headerButtonDelay);
+    });
+  });
+
+  function getRugFormValues() {
+    const formValues = { samples: [] };
+    const rugForm = document.getElementById('rug-form');
+    const allFormInputs = rugForm.querySelectorAll('.form-input:not(.sample-input)');
+    allFormInputs.forEach(inputEl => {
+      // Skip unchecked radio buttons
+      if (inputEl.type === 'radio' && !inputEl.checked) return;
+
+      // Note inputs with no name (For development)
+      const name = inputEl.name;
+      if (!name) {
+        console.log('no name:');
+        console.log(inputEl);
+        return;
+      }
+
+      // Record input value, handling special cases first
+      if (name === 'Launch Date') {
+        const [year, month, day] = inputEl.value.split('-');
+        const cleanDate = `${Number(month)}/${Number(day)}/${year}`
+        formValues[name] = cleanDate;
+      } else if (name === 'On Website' || name === 'On Design Manager') {
+        if (inputEl.checked) {
+          const formValue = inputEl.id.split('-').pop();
+          formValues[name] = formValue;
+        }
+      } else if (name === 'Primary Image') {
+        const key = `${name} ${inputEl.id.split('-').pop()}`;
+        formValues[key] = 'Yes';
+      } else {
+        formValues[name] = inputEl.value;
+      }
+    });
+
+    const snviDiv = document.getElementById('right-side-sample-name-version-info');
+    formValues['Sample Name Version Info'] = snviDiv.textContent;
+
+    const allSampleInputs = rugForm.querySelectorAll('.sample-input');
+    allSampleInputs.forEach(inputEl => {
+      const name = inputEl.name;
+      if (!name) {
+        console.log('no name:');
+        console.log(inputEl);
+        return;
+      }
+
+      const value = inputEl.value;
+      if (!value) {
+        console.log('no value:');
+        console.log(inputEl);
+        return;
+      }
+
+      const inputNum = inputEl.id.split('-').pop();
+      const idx = Number(inputNum) - 1;
+      
+      if (formValues.samples[idx]) {
+        formValues.samples[idx][name] = value;
+      } else {
+        formValues.samples[idx] = { [name]: value };
+      }
+    });
+
+    const sku = formValues['Temple SKU/DM Code'];
+    const batch = formValues['Unique Sample Batch Code'];
+    const today = new Date().toLocaleDateString();
+    const userName = destinationsObject.globals.user.userName;
+    const sampleSizeCodeMap = {
+      '1x1 Sample': 'A',
+      '2x2 Sample': 'B',
+      '6x6 Sample': 'C',
+      '13x18 Sample': 'D',
+      "18x24 Sample": 'E',
+      '2x3 Sample': 'F',
+      '2x4 Sample': 'G',
+      '9x9 Sample': 'H',
+      '14x14 Sample': 'I',
+      '18x18 Sample': 'J',
+      '2x1 Sample': 'K',
+      '6x12 Sample': 'L',
+      '6.5x7 Sample': 'M',
+      'Cutting': 'N',
+      "9x13 Sample": 'O',
+      '26x17.5 Sample': 'P',
+      "18x54 Sample": 'Q',
+    }
+
+    const formattedSampleObjects = [];
+    for (let idx = 0; idx < formValues.samples.length; idx++) {
+      const sampleObj = formValues.samples[idx];
+      const sampleNum = idx + 1;
+      const sampleSize = sampleObj[`sample-size-${sampleNum}`];
+
+      const prodSampleHeaderLabels = [
+        ['Inventory', 'quantity'],
+        ['On Hand', 'on-hand'],
+        ['On Loan', 'on-loan']
+      ];
+      prodSampleHeaderLabels.forEach(pair => {
+        const [header, key] = pair;
+        const psHeader = `${sampleSize} ${header}`;
+        formValues[psHeader] = sampleObj[`${key}-${sampleNum}`];
+      });
+
+      const sampleSku = `SAMP-${sku}-${sampleSizeCodeMap[sampleSize]}`;
+      formattedSampleObjects.push({
+        'Complete Sample Item Name': sampleObj[`sample-name-${sampleNum}`],
+        'Size': sampleSize,
+        'Quantity Total': sampleObj[`quantity-${sampleNum}`],
+        'Quantity On Loan': sampleObj[`on-loan-${sampleNum}`],
+        'Quantity On Hand': sampleObj[`on-hand-${sampleNum}`],
+        'Date Added': today,
+        'User Added': userName,
+        'Temple SKU/DM Code': sku,
+        'Unique Sample Batch Code': batch,
+        'Sample Sku': sampleSku,
+        'Temple Design Name': formValues['Temple Design Name'],
+        'Temple Colorway Name': formValues['Temple Colorway Name'],
+        'Mill Name': formValues['Mill Name'],
+        'Product Category': formValues['Product Category'],
+        'Sample Name Version Info': formValues['Sample Name Version Info']
+      });
+    }
+    formValues.samples = formattedSampleObjects;
+
+    console.log('formValues', formValues);
+
+    return formValues
+  }
+
+  function validateForm() {
+    /**
+     * Required inputs (radio buttons handled below)
+     */
+     const allRequiredInputs = document.querySelectorAll('input[required]:not([type="radio"])');
+    for (const reqInput of allRequiredInputs) {
+      if (!reqInput.checkVisibility()) {
+        console.log('this required input is hidden')
+        console.log(reqInput);
+        continue;
+      }
+
+      if (!reqInput.value) {
+        const inputCell = reqInput.parentNode;
+        const errorText = inputCell.querySelector('span.missing-required-error');
+        goToInvalidInput(reqInput, errorText);
+        return false;
+      }
+    }
+    
+    /**
+     * On website and on design manager radio buttons are required
+     */
+    for (const radioButtonsName of ['On Website', 'On Design Manager']) {
+      const radioButtons = Array.from(document.querySelectorAll(`input[name="${radioButtonsName}"]`));
+      const radioButtonSelected = radioButtons.some(btn => btn.checked);
+      if (!radioButtonSelected) {
+        const aButton = radioButtons.pop();
+        const buttonRow = aButton.closest('tr');
+        const errorText = buttonRow.querySelector('span.missing-required-error');
+        goToInvalidInput(aButton, errorText);
+        return false;
+      }
+    }
+
+    /**
+     * Pricing section:
+     * 1) Either cost range min AND cost range max, or cost need to be filled
+     * 2) Either cost range unit of measure, or cost unit of measure need to be filled
+     */
+    const pricingHeader = document.getElementById('pricing-section');
+    const pricingSection = pricingHeader.parentNode;
+
+    const costRangeMin = document.getElementById('cost-range-min');
+    const costRangeMax = document.getElementById('cost-range-max');
+    if (!(costRangeMin.value && costRangeMax.value)) {
+      const allCostInputs = document.querySelectorAll('input[name="cost"]');
+      for (const costInput of allCostInputs) {
+        if (!costInput.value) {
+          const errorText = pricingSection.querySelector('span.cost-error');
+          goToInvalidInput(costInput, errorText);
+          return false;
+        }
+      }
+    }
+
+    const costRangeUnitOfMeasure = document.getElementById('cost-range-unit-of-measure');
+    if (!costRangeUnitOfMeasure.value) {
+      const allCostUnitOfMeasureInputs = document.querySelectorAll('input[name="cost-unit-of-measure"]');
+      for (const costInput of allCostUnitOfMeasureInputs) {
+        if (!costInput.value) {
+          const errorText = pricingSection.querySelector('span.cost-unit-error');
+          goToInvalidInput(costInput, errorText);
+          return false;
+        }
+      }
+    }
+
+    return true;
+
+    // Scrolls to invalid input and reveals error text for user
+    function goToInvalidInput(invalidInput, errorText) {
+      console.log('invalid input', invalidInput);
+      console.log('error text', errorText);
+
+      const headerOffset = document.getElementById('header').offsetHeight;
+
+      const topPosition = 
+        invalidInput.getBoundingClientRect().top +
+        window.pageYOffset -
+        headerOffset -
+        20;
+      console.log('top position', topPosition);
+
+      window.scrollTo({
+        top: topPosition,
+        behavior: "smooth",
+      });
+
+      invalidInput.style.border = 'solid 2px indianred';
+      errorText.style.display = 'inline';
+      setTimeout(() => {
+        invalidInput.style.border = '';
+        errorText.style.display = '';
+      }, shortDelay);
+    }
+  }
+
+  function checkIfDataIsNew(rugFormValues) {
+    if (rugPageState.mode !== 'create') {
+      if (!dataHasChanged()) return false;
+    }
+
+    const [startingSku, startingBatch] = rugPageState.mode !== 'create' ?
+      [
+        rugPageState.startingData['Temple SKU/DM Code'],
+        rugPageState.startingData['Unique Sample Batch Code']
+      ] :
+      [
+        rugFormValues['Temple SKU/DM Code'],
+        rugFormValues['Unique Sample Batch Code'],
+      ]
+
+    if (!Object.hasOwn(rugPageState.data.productRows, startingSku)) {
+      return true;
+    }
+    if (!Object.hasOwn(rugPageState.data.productRows[startingSku], startingBatch)) {
+      return true;
+    }
+
+    const matchingData = rugPageState.data.productRows[startingSku][startingBatch];
+    for (const header in rugFormValues) {
+      if (header === 'samples') {
+        const formSamples = rugFormValues.samples;
+        const matchingSamples = matchingData.samples;
+
+        for (const sampleObj of formSamples) {
+          const sampleName = sampleObj['Complete Sample Item Name'];
+          const matchingSample = matchingSamples.find(match => match['Complete Sample Item Name'] === sampleName);
+
+          if (!matchingSample) {
+            // console.log('Could not find match for this sample, data is new')
+            // console.log(sampleName);
+            return true;
+          }
+
+          for (const key in sampleObj) {
+            const value = sampleObj[key];
+            const matchingValue = matchingSample[key];
+
+            if (value !== matchingValue) {
+              // console.log(`Sample ${sampleName} has a different value for ${key}, data is new`);
+              // console.log('old value:', matchingValue);
+              // console.log('form value:', value);
+              return true;
+            }
+          }
+        }
+      }
+
+      else if (Object.hasOwn(matchingData, header)) {
+        const originalVal = matchingData[header];
+        const formVal = rugFormValues[header];
+        if (originalVal !== formVal) {
+          // console.log('value mismatch found, data is new');
+          // console.log('header:', header);
+          // console.log('original value:', originalVal);
+          // console.log('form value:', formVal);
+          return true;
+        }
+      }
+    }
+
+    // console.log('data is not new');
+    return false;
+  }
+
+  function submitRugForm(rugFormValues) {
+    return new Promise((resolve, reject) => {
+      const formData = {
+        mode: rugPageState.mode,
+        formValues: rugFormValues,
+      }
+      google.script.run
+        .withFailureHandler(error => reject(error))
+        .withSuccessHandler(response => resolve(JSON.parse(response)))
+        .processSubmittedRugData(formData);
+    });
+  }
+
+  function updateRugPageState(newData) {
+    const currentMode = rugPageState.mode;
+
+    if (currentMode === 'edit') {
+      const { updatedProductRow, updatedSampleRows } = newData;
+
+      const sku = updatedProductRow['Temple SKU/DM Code'];
+      const batch = updatedProductRow['Unique Sample Batch Code'];
+      rugPageState.data.productRows[sku] = { [batch]: updatedProductRow };
+
+      updatedSampleRows.forEach(sampleObj => {
+        const sampleSize = sampleObj['Size'];
+        rugPageState.data.sampleRows[sku][sampleSize] = sampleObj;
+      });
+    }
+    
+    else {
+      const { codes, newProductRow, newSampleRows } = newData;
+      
+      if (Object.hasOwn(rugPageState.data.codes, codes.sku)) {
+        rugPageState.data.codes[codes.sku].push(codes.batch);
+      } else {
+        rugPageState.data.codes[codes.sku] = [codes.batch];
+      }
+
+      rugPageState.data.productRows[codes.sku] = { [codes.batch]: newProductRow };
+
+      newSampleRows.forEach(sampleObj => {
+        const sampleSize = sampleObj['Size'];
+
+        if (Object.hasOwn(rugPageState.data.sampleRows, codes.sku)) {
+          rugPageState.data.sampleRows[codes.sku][sampleSize] = sampleObj;
+        } else {
+          rugPageState.data.sampleRows[codes.sku] = { [sampleSize]: sampleObj };
+        }
+      });
+      
+      fillEntryModeModalDropdowns();
+    }
+  }
+
+  function clearRugForm() {
+    removeAllDuplicatedSections();
+
+    const rugForm = document.getElementById('rug-form');
+
+    const allRugFormInputs = rugForm.querySelectorAll('.form-input')
+    allRugFormInputs.forEach(inputEl => inputEl.value = '');
+
+    const allRugSampleInputs = rugForm.querySelectorAll('sample-input');
+    allRugSampleInputs.forEach(inputEl => inputEl.value = '');
+
+    const openDriveButtons = rugForm.querySelectorAll('div.open-drive-button');
+    openDriveButtons.forEach(buttonEl => buttonEl.textContent = "Open Drive");
+
+    const allRadioButtons = rugForm.querySelectorAll('input[type="radio"]');
+    allRadioButtons.forEach(buttonEl => buttonEl.checked = false);
+
+    const itemPhotoContainer = document.getElementById('item-photo-container');
+    if (itemPhotoContainer.childNodes.length) {
+      itemPhotoContainer.lastChild.remove();
+    }
+    itemPhotoContainer.classList.remove('contains-photo');
+
+    const rightSideDivs = document.querySelectorAll('div.right-side-div')
+    rightSideDivs.forEach(divEl => divEl.textContent = '--');
+
+    // const adjustmentSampleSizeInputs = rugForm.querySelectorAll('.adjustment-sample-size');
+    // adjustmentSampleSizeInputs.forEach(inputEl => inputEl.value = '');
+
+    rugPageState.primaryImageNum = null;
+  }
+
+  function formIsEmpty() {
+    const allRugFormInputs = document.querySelectorAll('.form-input');
+
+    for (const inputEl of allRugFormInputs) {
+      if (inputEl.type === 'radio') {
+        if (inputEl.checked) {
+          console.log('checked radio', inputEl);
+          return false;
+        }
+      } else if (inputEl.value) {
+        if (rugPageState.mode === 'create' && inputEl.id.includes('on-loan')) {
+          continue;
+        }
+        console.log('filled input', inputEl);
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * *******************************************************
+   * ******************** RUG DROPDOWNS ********************
+   * *******************************************************
+   */
+  function fillEntryModeModalDropdowns() {
+    // Get the modal dropdown elements
+    const skuInput = document.getElementById('temple-sku-modal');
+    const skuList = skuInput.parentNode.querySelector('ul');
+    const batchInput = document.getElementById('batch-code-modal');
+    const batchList = batchInput.parentNode.querySelector('ul');
+
+    // Empty the sku list
+    const allSkuItems = skuList.querySelectorAll('li:not(.clear-selection)');
+    allSkuItems.forEach(listItem => listItem.remove());
+
+    // Fill the modal dropdown elements
+    const sortedCodes = Object.keys(rugPageState.data.codes).sort();
+    for (const skuCode of sortedCodes) {
+      const skuCodeItem = document.createElement('li');
+      skuCodeItem.classList.add('gothica1-light-charade-light');
+      skuCodeItem.textContent = skuCode;
+
+      skuCodeItem.addEventListener('click', () => {
+        skuInput.value = skuCode;
+        skuList.classList.add('visually-hidden');
+
+        const allBatchCodeItems = batchList.querySelectorAll('li:not(.clear-selection)');
+        allBatchCodeItems.forEach(listItem => listItem.remove());
+        batchInput.value = '';
+
+        const batchCodes = rugPageState.data.codes[skuCode];
+        for (const batchCode of batchCodes) {
+          const batchCodeItem = document.createElement('li');
+          batchCodeItem.classList.add('gothica1-light-charade-light');
+          batchCodeItem.textContent = batchCode;
+          
+          batchCodeItem.addEventListener('click', () => {
+            batchInput.value = batchCode;
+            batchList.classList.add('visually-hidden');
+          });
+
+          batchList.appendChild(batchCodeItem);
+        }
+
+        batchInput.placeholder = "Search Here";
+        batchInput.disabled = false;
+      });
+
+      skuList.appendChild(skuCodeItem);
+    }
+
+    // Clearing the modal sku input should also clear the modal batch code input
+    const skuClearSelectionItem = skuList.querySelector('li.clear-selection');
+    skuClearSelectionItem.addEventListener('click', () => {
+      const batchClearSelectionItem = batchList.querySelector('li.clear-selection');
+      handleClearSelectionClick(batchClearSelectionItem);
+      
+      batchInput.placeholder = 'Choose a SKU/DM Code';
+      batchInput.disabled = true;
+    });
+  }
+
+  function fillRugFormDropdowns() {
+    const allDropdownVals = rugPageState.data.dropdownVals;
+    console.log('all dropdown vals', allDropdownVals);
+    const rugForm = document.getElementById('rug-form');
+    const customSelectsToFill = rugForm.querySelectorAll('div.custom-select:not(.hard-coded)');
+
+    customSelectsToFill.forEach(csDiv => {
+      const csInput = csDiv.querySelector('input');
+      const validationHeader = csInput.dataset.validationHeader.toLowerCase();
+      const csList = csDiv.querySelector('ul');
+      const templateItem = csList.querySelector('li.template-li');
+      console.log('header', validationHeader)
+
+      const dropdownVals = allDropdownVals[validationHeader];
+      console.log('dropdown vals', dropdownVals);
+      for (const val of dropdownVals) {
+        const listItem = templateItem.cloneNode();
+        listItem.classList.remove('template-li');
+        listItem.textContent = val;
+        csList.appendChild(listItem);
+      }
+
+      csInput.disabled = false;
+      csInput.placeholder = 'Search Here';
+    });
+  }
+
+  function handleDropdownClick(dropdownEl) {
+    const dropdownList = dropdownEl.parentNode.querySelector('ul');
+    if (dropdownList.classList.contains('visually-hidden')) {
+      dropdownList.classList.remove('visually-hidden');
+      dropdownList.scrollTop = 0;
+    }
+  }
+
+  function handleDropdownInput(dropdownEl) {
+    const dropdownList = dropdownEl.parentNode.querySelector('ul');
+    const allListItems = dropdownList.querySelectorAll('li:not(.template-li):not(.clear-selection)');
+
+    const searchPhrase = dropdownEl.value.toLowerCase();
+    if (!searchPhrase) {
+      allListItems.forEach(listItem => listItem.classList.remove('visually-hidden'));
+      dropdownList.scrollTop = 0;
+      return;
+    }
+
+    allListItems.forEach(listItem => {
+      const itemText = listItem.textContent.toLowerCase();
+      if (itemText.includes(searchPhrase)) {
+        listItem.classList.remove('visually-hidden');
+      } else {
+        listItem.classList.add('visually-hidden');
+      }
+    });
+  }
+
+  function handleDropdownBlur(dropdownEl) {
+    // This setTimeout is added so that handleListItemClick and
+    // handleClearSelectionClick have a chance to fire
+    setTimeout(() => {
+      const customSelect = dropdownEl.parentNode;
+      const dropdownList = customSelect.querySelector('ul');
+
+      const dropdownVal = dropdownEl.value.toLowerCase();
+      if (dropdownVal) {
+        const allListItems = dropdownList.querySelectorAll('li:not(.template-li):not(.clear-selection)');
+
+        let matchFound = false;
+        for (const listItem of allListItems) {
+          if (dropdownVal === listItem.textContent.toLowerCase()) {
+            dropdownEl.value = listItem.textContent;
+            matchFound = true;
+            break;
+          }
+        }
+
+        if (!matchFound) {
+          dropdownEl.style.color = 'indianred';
+          const noMatchErrorText = customSelect.querySelector('span.no-match-error');
+          noMatchErrorText.style.display = 'inline';
+          setTimeout(() => {
+            noMatchErrorText.style.display = '';
+            dropdownEl.value = '';
+            dropdownEl.style.color = '';
+          }, shortDelay);
+        }
+      }
+
+      dropdownList.classList.add('visually-hidden');
+    }, 200);
+  }
+
+  function handleClearSelectionClick(clearSelectionItem) {
+    const dropdownList = clearSelectionItem.parentNode;
+    const allListItems = dropdownList.querySelectorAll('li');
+    allListItems.forEach(listItem => listItem.classList.remove('visually-hidden'));
+
+    const dropdownInput = dropdownList.parentNode.querySelector('input');
+    dropdownInput.value = '';
+  }
+
+  function handleListItemClick(listItem) {
+    const dropdownList = listItem.parentNode;
+    dropdownList.classList.add('visually-hidden');
+
+    const dropdownInput = dropdownList.parentNode.querySelector('input');
+    dropdownInput.value = listItem.textContent;
+
+    dropdownInput.dispatchEvent(new Event('change'));
+  }
+
+  function handleProductCategoryChange(prodCatInputEl) {
+    const maxWidthFeetInputs = Array.from(document.querySelectorAll('.form-input')).filter(el => el.id.includes('max-width-feet'));
+    const prodCatVal = prodCatInputEl.value;
+    maxWidthFeetInputs.forEach(
+      inputEl => inputEl.required = prodCatVal === 'Broadloom'
+    );
+  }
+
+  async function handleMillNameChange() {
+    console.log('handle mill name change')
+
+    // Update the text for the open drive buttons
+    const openDriveButtons = document.querySelectorAll('div.open-drive-button');
+    openDriveButtons.forEach(buttonEl => buttonEl.textContent = 'Loading...');
+    
+    // Empty the photo display
+    const itemPhotoContainer = document.getElementById('item-photo-container');
+    if (itemPhotoContainer.childNodes.length) {
+      itemPhotoContainer.lastChild.remove();
+    }
+    itemPhotoContainer.classList.remove('contains-photo');
+
+    // Empty the photo gallery
+    const photoGallery = document.querySelector('div.photo-gallery');
+    while (photoGallery.hasChildNodes()) {
+      photoGallery.removeChild(photoGallery.lastChild);
+    }
+
+    // Empty the open drive inputs
+    const openDriveInputs = document.querySelectorAll('input.open-drive-input');
+    openDriveInputs.forEach(inputEl => inputEl.value = '');
+
+    // Uncheck all the primary image radio buttons
+    const primaryImageRadioButtons = document.querySelectorAll('input[name="primary-image"]');
+    primaryImageRadioButtons.forEach(radBtn => radBtn.checked = false);
+
+    // Fill the photo gallery
+    const millNameInput = document.getElementById('mill-name');
+    const millName = millNameInput.value;
+    if (millName) {
+      try {
+        await fillSelectImageModal(millName);
+        openDriveButtons.forEach(buttonEl => buttonEl.textContent = 'Open Drive');
+      } catch(error) {
+        if (error.message === `Error: Could not find folder with mill name ${millName}`) {
+          openDriveButtons.forEach(buttonEl => buttonEl.textContent = "Images Not Found")
+        } else {
+          throw error;
+        }
+      }
+    } else {
+      openDriveButtons.forEach(buttonEl => buttonEl.textContent = 'Open Drive');
+    }
+  }
+
+  function handleSampleItemClick(listItem) {
+    const customSelectDiv = listItem.closest('div.custom-select');
+    const sampleInput = customSelectDiv.querySelector('input');
+
+    const millName = document.getElementById('mill-name').value;
+    const designName = document.getElementById('design-name').value;
+    const colorwayName = document.getElementById('colorway').value;
+
+    if (!(millName && designName && colorwayName)) {
+      const errorText = customSelectDiv.querySelector('span.missing-val-error');
+      errorText.style.display = 'inline';
+      sampleInput.style.color = 'indianred';
+      setTimeout(() => {
+        errorText.style.display = '';
+        sampleInput.value = '';
+        sampleInput.style.color = '';
+      }, shortDelay);
+      return;
+    }
+
+    const sampleSize = sampleInput.value;
+
+    const sampleName = `${millName} ${designName} ${colorwayName} ${sampleSize}`;
+    const inputId = sampleInput.id;
+    const inputIdNum = inputId.split('-').pop();
+    const sampleNameInput = document.getElementById(`sample-name-${inputIdNum}`);
+    sampleNameInput.value = sampleName;
+  }
+
+  function handleSampleClearSelectionClick(clearSelectionItem) {
+    // Determine which sample was clicked
+    const customSelect = clearSelectionItem.closest('div.custom-select');
+    const dropdownInput = customSelect.querySelector('input');
+    const dropdownId = dropdownInput.id;
+    const dropdownIdNum = dropdownId.split('-').pop();
+
+    // Reset all corresponding inputs
+    const corrInputIds = ['quantity', 'sample-name', 'on-hand', 'on-loan'];
+    for (const idPrefix of corrInputIds) {
+      const quantityInput = document.getElementById(`${idPrefix}-${dropdownIdNum}`);
+      quantityInput.value = '';
+    }
+  }
+
+  function handleSampleQuantityChange(quantityInput) {
+    const idNum = quantityInput.id.split('-').pop();
+    const onHandInput = document.getElementById(`on-hand-${idNum}`);
+
+    const quantity = quantityInput.value;
+    if (!quantity) {
+      onHandInput.value = '';
+      return;
+    }
+    
+    const onLoanValue = document.getElementById(`on-loan-${idNum}`).value;
+    const difference = String(Number(quantity) - Number(onLoanValue));
+    onHandInput.value = difference;
+  }
+  
+  function handlePriceSetByCost(costInput) {
+    if (!costInput.value) {
+      return;
+    }
+
+    const costIdNum = costInput.id.split('-').pop();
+    const priceInput = document.getElementById(`price-${costIdNum}`);
+    if (priceInput.value) {
+      return;
+    }
+
+    try {
+      const priceVal = 2 * Number(costInput.value.slice(1)); // Slice removes the dollar sign
+      priceInput.value = priceVal
+      console.log(priceVal);
+    } catch(error) {
+      throw error
+    }
+    
+    formatCurrencyInput(priceInput);
+  }
+
+  function handlePriceDropdownSetByCost(inputOrListItem) {
+    console.log('input or li', inputOrListItem);
+    const customSelect = inputOrListItem.closest('div.custom-select');
+    console.log('custom select', customSelect);
+    const costDropdownInput = customSelect.querySelector('input');
+
+    if (!costDropdownInput.value) {
+      return;
+    }
+
+    const costIdNum = costDropdownInput.id.split('-').pop();
+    const priceId = costDropdownInput.id.includes('unit') ?
+      `price-unit-of-measure-${costIdNum}` :
+      `price-reason-${costIdNum}`;
+    const priceDropdownInput = document.getElementById(priceId);
+    if (priceDropdownInput.value) {
+      return;
+    }
+
+    priceDropdownInput.value = costDropdownInput.value;
+  }
+
+  function handleSnviChange() {
+    const snviDiv = document.getElementById('right-side-sample-name-version-info');
+    snviDiv.style.fontWeight = 'bold';
+
+    const productCategory = document.getElementById('product-category').value;
+    console.log('product category', productCategory);
+    if (!productCategory) {
+      snviDiv.textContent = '--';
+
+      setTimeout(() => snviDiv.style.fontWeight = '', shortDelay);
+      return;
+    }
+
+    const snviInfo = {
+      'Product Category': productCategory,
+      'Misc. Item Reference': document.getElementById('item-reference').value,
+      'Version Number': document.getElementById('version-number').value,
+      'Mill Design Number 1': document.getElementById('mill-design-number-1').value,
+      'Mill Colorway Number': document.getElementById('mill-colorway-number').value,
+    }
+
+    const snviText = generateSnviText(snviInfo);
+    console.log('snviText', snviText);
+    snviDiv.textContent = snviText ? snviText : '--';
+
+    setTimeout(() => snviDiv.style.fontWeight = '', shortDelay);
+  }
+
+  /**
+   * *******************************************************
+   * ****************** ENTRY MODE MODAL *******************
+   * *******************************************************
+   */
+  async function openEntryModeModal(mode) {
+    return new Promise((resolve, reject) => {
+      // Add the selected mode to the title
+      const modal = document.getElementById('entryModeModal');
+      const titleSpan = modal.querySelector('span.title-text');
+      titleSpan.textContent = mode;
+
+      // Reveal the modal
+      modal.style.display = "block";
+      document.body.classList.add('no-scroll');
+
+      // Initialize an object to return
+      const selectedCodes = {
+        sku: null,
+        batch: null,
+      };
+
+      // Select the confirm and close buttons
+      const confirmButton = document.getElementById('entryModeConfirmButton');
+      const closeButton = modal.querySelector('span.close-modal');
+
+      // Confirm button gives the first way of resolving
+      confirmButton.addEventListener('click', submitEntryModeModal);
+      function submitEntryModeModal(e) {
+        // Do not submit if the sku input is empty
+        const modalSkuInput = modal.querySelector('#temple-sku-modal');
+        if (!modalSkuInput.value) {
+          const parent = modalSkuInput.parentNode;
+          const skuErrorText = parent.querySelector('span.error-text');
+          skuErrorText.style.display = 'inline';
+          setTimeout(() => skuErrorText.style.display = '', shortDelay);
+          return;
+        }
+
+        // Do not submit if the batch code input is empty
+        const modalBatchCodeInput = modal.querySelector('#batch-code-modal');
+        if (!modalBatchCodeInput.value) {
+          const parent = modalBatchCodeInput.parentNode;
+          const batchErrorText = parent.querySelector('span.error-text');
+          batchErrorText.style.display = 'inline';
+          setTimeout(() => batchErrorText.style.display = '', shortDelay);
+          return;
+        }
+
+        // Get the codes to return
+        selectedCodes.sku = modalSkuInput.value;
+        selectedCodes.batch = modalBatchCodeInput.value;
+        // if (mode === 'clone') {
+        //   const batchCodes = rugPageState.data.codes[modalSkuInput.value];
+        //   const batchCodeNums = batchCodes.map(code => {
+        //     const codeParts = code.split('-');
+        //     return Number(codeParts.pop());
+        //   });
+
+        //   const nextBatchCodeNum = Math.max(...batchCodeNums) + 1;
+        //   const nextBatchCodeStr = String(nextBatchCodeNum).padStart(3, '0');
+        //   const nextBatchCode = `${modalSkuInput.value}-${nextBatchCodeStr}`;
+
+        //   selectedCodes.batchToClone = selectedCodes.batch;
+        //   selectedCodes.batch = nextBatchCode;
+        // }
+
+        // Remove the event listener and hide the modal
+        confirmButton.removeEventListener('click', submitEntryModeModal);
+        closeButton.removeEventListener('click', closeWithoutSubmission);
+        hideEntryModeModal();
+
+        // Resolve with the codes
+        resolve(selectedCodes);
+      }
+
+      // Close button gives the second way of resolving
+      closeButton.addEventListener('click', closeWithoutSubmission);
+      function closeWithoutSubmission(e) {
+        // Remove the event listener and hide the modal
+        confirmButton.removeEventListener('click', submitEntryModeModal);
+        closeButton.removeEventListener('click', closeWithoutSubmission);
+        hideEntryModeModal(false);
+
+        // Resolve with the codes
+        resolve('closed without submission');
+      }
+    });
+  }
+
+  function hideEntryModeModal(closedWithSubmit = true) {
+    // Reset both select inputs
+    const modal = document.getElementById('entryModeModal');
+    const inputEls = modal.querySelectorAll('input');
+    inputEls.forEach(inputEl => inputEl.value = '');
+
+    // Reset the batch code input
+    const modalBatchCodeInput = modal.querySelector('#batch-code-modal');
+    modalBatchCodeInput.placeholder = 'Choose a SKU/DM Code';
+    modalBatchCodeInput.disabled = true;
+
+    // Set the entry mode toggle to 'create' if modal closed with the x-button in the top right 
+    if (!closedWithSubmit) {
+      const previousModeToggle = document.getElementById(`${rugPageState.mode}-radio`);
+      previousModeToggle.checked = true;
+    }
+
+    // Hide the modal
+    modal.style.display = "none";
+    document.body.classList.remove('no-scroll');
+  }
+
+  /**
+   * *******************************************************
+   * ******************** WARNING MODAL ********************
+   * *******************************************************
+   */
+  function openWarningModal() {
+    return new Promise((resolve, reject) => {
+      const warningModal = document.getElementById('warningModal');
+      const closeSpan = warningModal.querySelector('span.close-modal');
+      const cancelButton = warningModal.querySelector('#warningCancelButton');
+      const confirmButton = warningModal.querySelector('#warningConfirmButton');
+
+      closeSpan.addEventListener('click', handleCancelClick);
+      cancelButton.addEventListener('click', handleCancelClick);
+      confirmButton.addEventListener('click', handleConfirmClick);
+
+      warningModal.style.display = "block";
+      document.body.classList.add('no-scroll');
+
+      function handleConfirmClick() {
+        resetWarningModal();
+        resolve('confirm');
+      }
+      function handleCancelClick() {
+        resetWarningModal();
+        resolve('cancel');
+      }
+      function resetWarningModal() {
+        hideWarningModal();
+        closeSpan.removeEventListener('click', handleCancelClick);
+        cancelButton.removeEventListener('click', handleCancelClick);
+        confirmButton.removeEventListener('click', handleConfirmClick);
+      }
+    });
+  }
+
+  function hideWarningModal() {
+    // Hide the modal
+    const warningModal = document.getElementById('warningModal');
+    warningModal.style.display = "none";
+
+    // Remove no-scroll from the body
+    document.body.classList.remove('no-scroll');
+  }
+
+  /**
+   * *******************************************************
+   * ********************* IMAGE MODAL *********************
+   * *******************************************************
+   */
+  function fetchImageData(millName) {
+    return new Promise((resolve, reject) => {
+      google.script.run
+        .withFailureHandler(error => reject(error))
+        .withSuccessHandler(imageData => resolve(JSON.parse(imageData)))
+        .getImageDataFor(millName);
+    });
+  }
+
+  async function fillSelectImageModal(millName) {
+    // Remove the loading icon
+    const loadingIcon = document.getElementById('imageLoadingIcon');
+    loadingIcon.style.display = 'none';
+
+    const photoGallery = document.querySelector('div.photo-gallery');
+    if (!photoGallery.childElementCount) {
+      // Get the image data
+      let imageData;
+      try {
+        imageData = await fetchImageData(millName);
+      } catch(error) {
+        if (error.message === `Error: Could not find folder with mill name ${millName}`) {
+          const errorText = document.createElement('p');
+          errorText.textContent = error.message;
+          photoGallery.appendChild(errorText);
+        }
+        return;
+      }
+
+      // Fill the gallery
+      const urlPrefix = 'https://drive.google.com/thumbnail?id=';
+      const allFigures = [];
+      for (const image of imageData) {
+        // Create a container div for the image
+        const photoContainer = document.createElement('div');
+        photoContainer.classList.add('photo-container');
+
+        // Create the photo and a caption
+        const figure = document.createElement('figure');
+        figure.dataset.imageName = image.name;
+        figure.dataset.imageId = image.id;
+
+        const photo = document.createElement('img');
+        photo.src = urlPrefix + image.id;
+        photo.alt = image.name;
+
+        const caption = document.createElement('figcaption');
+        caption.textContent = image.name;
+        caption.classList.add('gothica1-light-charade-14px');
+
+        // Add the figure to the container and the container to the gallery
+        allFigures.push(figure);
+        figure.appendChild(photo);
+        figure.appendChild(caption);
+        photoContainer.appendChild(figure);
+        photoGallery.appendChild(photoContainer);
+      }
+
+      // Add event listeners to the photo containers
+      allFigures.forEach(figure => {
+        figure.addEventListener('click', () => {
+          const figureWasSelected = figure.classList.contains('selected');
+
+          allFigures.forEach(fig => fig.classList.remove('selected'));
+
+          if (!figureWasSelected) {
+            figure.classList.add('selected');
+          }
+        });
+      });
+    }
+  }
+
+  function openSelectImageModal(openDriveButton) {
+    // Retrieve the selected mill name, terminate if none is selected
+    const millNameInput = document.getElementById('mill-name');
+    const millName = millNameInput.value;
+    if (!millName) {
+      const divIdNum = openDriveButton.id.split('-').pop();
+      const errorTextEl = document.getElementById(`open-drive-error-${divIdNum}`);
+      errorTextEl.style.display = 'inline';
+      setTimeout(() => {
+        errorTextEl.style.display = '';
+      }, shortDelay);
+      return;
+    }
+
+    // Attach the click handler to the confirm button
+    const confirmButton = document.getElementById('imageConfirmButton');
+    confirmButton.addEventListener('click', handleConfirmClick);
+
+    // Hide the loading icon
+    const loadingIcon = document.getElementById('imageLoadingIcon');
+    loadingIcon.style.display = 'none';
+
+    // Reveal the modal and remove scrolling from the body
+    const modal = document.getElementById('selectImageModal');
+    modal.style.display = "block";
+    document.body.classList.add('no-scroll');
+
+    // confirm button click handler
+    function handleConfirmClick() {
+      const selectedFigure = document.querySelector('div.photo-container figure.selected');
+
+      if (selectedFigure) {
+        hideSelectImageModal();
+
+        const imageName = selectedFigure.dataset.imageName;
+        const imageId = selectedFigure.dataset.imageId;
+
+        const imageInputs = Array.from(openDriveButton.parentNode.querySelectorAll('input'));
+        const nameInput = imageInputs.find(inputEl => inputEl.id.includes('image-name'));
+        const idInput = imageInputs.find(inputEl => inputEl.id.includes('image-id'));
+
+        nameInput.value = imageName;
+        idInput.value = imageId;
+        openDriveButton.textContent = imageName;
+
+        const tbody = openDriveButton.closest('tbody')
+        const imageTypeList = tbody.querySelector('ul');
+        const clearSelectionItem = imageTypeList.querySelector('li.clear-selection');
+        handleClearSelectionClick(clearSelectionItem);
+
+        const primaryImageRadioButton = tbody.querySelector('input[type="radio"]');
+        if (primaryImageRadioButton.checked) {
+          rugPageState.primaryImageNum = null;
+          primaryImageRadioButton.checked = false;
+          
+          const itemPhotoContainer = document.getElementById('item-photo-container');
+          if (itemPhotoContainer.childNodes.length) {
+            itemPhotoContainer.lastChild.remove();
+          }
+          itemPhotoContainer.classList.remove('contains-photo');
+        }
+      }
+      
+      else {
+        const modalPrompt = document.getElementById('image-modal-prompt');
+        modalPrompt.style.color = 'indianred';
+        setTimeout(() => modalPrompt.style.color = '', shortDelay);
+      }
+    }
+  }
+
+  function hideSelectImageModal() {
+    // Hide the modal and reactive scrolling for the body
+    const modal = document.getElementById('selectImageModal');
+    modal.style.display = 'none';
+    document.body.classList.remove('no-scroll');
+
+    // Activate the loading icon
+    const loadingIcon = document.getElementById('imageLoadingIcon');
+    loadingIcon.style.display = '';
+
+    // Unselect any selected photo containers
+    const allFigures = modal.querySelectorAll('figure');
+    allFigures.forEach(figure => figure.classList.remove('selected'));
+
+    // Clone the confirm button to remove the click handler
+    const confirmButton = document.getElementById('imageConfirmButton');
+    const newConfirmButton = confirmButton.cloneNode(true);
+    confirmButton.replaceWith(newConfirmButton);
+  }
+
+  function updateItemPhotoDisplay(primaryRadioButton) {
+    const imageSection = primaryRadioButton.closest('tbody');
+    const imageSectionNum = imageSection.id.split('-').pop();
+
+    // if (rugPageState.primaryImageNum === imageSectionNum) {
+    //   console.log('no need to update');
+    //   return;
+    // }
+
+    const imageName = document.getElementById(`image-name-${imageSectionNum}`).value;
+    const imageId = document.getElementById(`image-id-${imageSectionNum}`).value;
+    const imageType = document.getElementById(`image-type-${imageSectionNum}`).value;
+
+    if (!(imageName && imageId && imageType)) {
+      primaryRadioButton.checked = false;
+      if (rugPageState.primaryImageNum) {
+        const allPrimaryRadioButons = document.querySelectorAll('input[name="primary-image"]');
+        allPrimaryRadioButons.forEach(radBtn => {
+          const radBtnIdNum = radBtn.id.split('-').pop();
+          if (rugPageState.primaryImageNum === radBtnIdNum) {
+            radBtn.checked = true;
+          }
+        });
+      }
+
+      const tableRow = primaryRadioButton.closest('tr');
+      const errorTextEl = tableRow.querySelector('span.error-text');
+      errorTextEl.style.display = 'inline';
+      setTimeout(() => errorTextEl.style.display = 'none', shortDelay);
+      return;
+    }
+
+    rugPageState.primaryImageNum = imageSectionNum;
+
+    const urlPrefix = 'https://drive.google.com/thumbnail?id=';
+    const figure = document.createElement('figure');
+    const photo = document.createElement('img');
+    photo.src = urlPrefix + imageId;
+    photo.alt = imageName;
+    const caption = document.createElement('figcaption');
+    caption.textContent = imageName;
+    caption.classList.add('gothica1-light-charade-14px');
+
+    figure.appendChild(photo);
+    figure.appendChild(caption);
+
+    const itemPhotoContainer = document.getElementById('item-photo-container');
+    if (itemPhotoContainer.childNodes.length) {
+      itemPhotoContainer.lastChild.remove();
+    }
+    itemPhotoContainer.appendChild(figure);
+    itemPhotoContainer.classList.add('contains-photo')
+  }
+
+  /**
+   * *******************************************************
+   * ********************* FORMATTING **********************
+   * *******************************************************
+   */
+  function formatCurrencyInput(inputEl) {
+    inputEl.value = format(inputEl.value);
+
+    function format(str) {
+      if (str === '') {
+        return str;
+      }
+
+      const numStr = str.startsWith('$') ?
+        Number(str.slice(1)) :
+        Number(str);
+      if (isNaN(numStr)) {
+        alert("Please enter a valid dollar amount");
+        return ''
+      }
+
+      return numStr.toLocaleString(undefined, { style: 'currency', currency: 'USD' });
+    }
+  }
+
+  function formatPercentageInput(inputEl) {
+    inputEl.value = format(inputEl.value);
+
+    function format(str) {
+      if (str === '') {
+        return str;
+      }
+
+      const errorTextEl = inputEl.parentNode.querySelector('span.error-text');
+      const strParts = str.split('.');
+      if (strParts.length > 2) {
+        errorTextEl.style.display = 'inline';
+        setTimeout(() => errorTextEl.style.display = '', shortDelay);
+        return '';
+      } else if (strParts.length === 1) {
+        strParts.push('0');
+      }
+
+      const [wholePart, decimalPart] = strParts.map(s => {
+        if (s.endsWith('%')) {
+          return Number(s.slice(0, s.length - 1));
+        }
+        return Number(s)
+      });
+      const invalidEntry = isNaN(wholePart)
+        || isNaN(decimalPart)
+        || wholePart > 100
+        || (wholePart === 100 && decimalPart !== 0)
+        || wholePart < 0
+        || decimalPart > 9;
+      if (invalidEntry) {
+        errorTextEl.style.display = '';
+        setTimeout(() => errorTextEl.style.display = 'none', shortDelay);
+        return '';
+      }
+
+      if (decimalPart) {
+        return `${wholePart}.${decimalPart}%`;
+      }
+      return `${wholePart}.0%`;
+    }
+  }
+
+  /**
+   * *******************************************************
+   * *************** DUPLICATING SECTIONS ******************
+   * *******************************************************
+   */
+  function addDuplicatedSection(addEl) {
+    const addElRow = addEl.closest('tr');
+    if (addEl.classList.contains('has-spacer')) {
+      const addElTd = addEl.closest('td');
+      const spacerTd = addElRow.querySelector('td.add-el-spacer');
+      addElTd.classList.add('visually-hidden');
+      spacerTd.classList.remove('visually-hidden');
+    } else {
+      addElRow.classList.add('visually-hidden');
+    }
+      
+    const tbody = addEl.closest('tbody');
+    const tbodyIdParts = tbody.id.split('-');
+    const tbodyIdNum = Number(tbodyIdParts.pop());
+
+    const nextTbodyId = tbodyIdParts.join('-') + '-' + String(tbodyIdNum + 1);
+    const nextTbody = document.getElementById(nextTbodyId);
+    nextTbody.classList.remove('visually-hidden');
+
+    if (tbodyIdNum !== 1) {
+      const removeEl = tbody.querySelector('span.remove-duplicate');
+      removeEl.classList.add('visually-hidden');
+    }
+  }
+
+  function removeDuplicatedSection(removeEl) {
+    const tbody = removeEl.closest('tbody');
+    if (tbody.classList.contains('visually-hidden')) return;
+
+    tbody.classList.add('visually-hidden');
+    tbody.querySelectorAll('input').forEach(inputEl => {
+      if (inputEl.type === 'radio') {
+        inputEl.checked = false;
+      } else {
+        inputEl.value = '';
+      }
+    });
+    tbody.querySelectorAll('ul.rug-dropdown').forEach(dropdown => {
+      dropdown.querySelectorAll('li').forEach(item => item.classList.remove('visually-hidden'));
+      dropdown.scrollTop = 0;
+    });
+    tbody.querySelectorAll('div.open-drive-button').forEach(button => button.textContent = 'Open Drive');
+
+    const tbodyIdParts = tbody.id.split('-');
+    const tbodyIdNum = Number(tbodyIdParts.pop());
+
+    const previousTbodyId = tbodyIdParts.join('-') + '-' + String(tbodyIdNum - 1);
+    const previousTbody = document.getElementById(previousTbodyId);
+
+    const previousAddEl = previousTbody.querySelector('div.add-el');
+    const previousAddElRow = previousAddEl.closest('tr');
+    if (previousAddEl.classList.contains('has-spacer')) {
+      const previousAddElTd = previousAddEl.closest('td');
+      const previousSpacerTd = previousAddElRow.querySelector('td.add-el-spacer');
+      previousAddElTd.classList.remove('visually-hidden');
+      previousSpacerTd.classList.add('visually-hidden');
+    } else {
+      previousAddElRow.classList.remove('visually-hidden');
+    }
+
+    const previousRemoveEl = previousTbody.querySelector('span.remove-duplicate');
+    if (previousRemoveEl) {
+      previousRemoveEl.classList.remove('visually-hidden');
+    }
+  }
+
+  function addDuplicatedSampleSections(addEl) {
+    const idNum = addEl.closest('tbody').id.split('-').pop();
+    const nextIdNum = String(1 + Number(idNum));
+    ['current-sample-inventory'].forEach(idPrefix => {
+      const tbodyId = idPrefix + '-' + nextIdNum;
+      document.getElementById(tbodyId).classList.remove('visually-hidden');
+    });
+
+    if (rugPageState.mode === 'create') {
+      const onLoanInput = document.getElementById(`on-loan-${nextIdNum}`);
+      onLoanInput.value = 0;
+    }
+  }
+
+  function removeDuplicatedSampleSections(removeEl) {
+    const idNum = removeEl.closest('tbody').id.split('-').pop();
+    ['current-sample-inventory'].forEach(idPrefix => {
+      const tbodyId = idPrefix + '-' + idNum;
+      const tbody = document.getElementById(tbodyId)
+      tbody.classList.add('visually-hidden');
+      tbody.querySelectorAll('input').forEach(inputEl => inputEl.value = '');
+    });
+  }
+
+  function addAllDuplicatedSections() {
+    const allAddEls = document.querySelectorAll('div.add-el');
+    allAddEls.forEach(addEl => {
+      addDuplicatedSection(addEl);
+
+      const tbodyId = addEl.closest('tbody').id;
+      if (tbodyId && tbodyId.includes('sample-size-section')) {
+        addDuplicatedSampleSections(addEl);
+      }
+    });
+  }
+
+  function removeAllDuplicatedSections(removeFilled = true) {
+    const allRemoveEls = Array.from(document.querySelectorAll('span.remove-duplicate'));
+    while (allRemoveEls.length) {
+      const removeEl = allRemoveEls.pop();
+      const tbody = removeEl.closest('tbody');
+      // console.log('tbody id:')
+      // console.log(tbody.id);
+
+      const sectionIsFilled = Array.from(tbody.querySelectorAll('.form-input'))
+        .some(formInput => {
+          if (formInput.type === 'radio') {
+            return formInput.checked;
+
+            // const isChecked = formInput.checked;
+            // if (isChecked) {
+            //   console.log('checked radio button:')
+            //   console.log(formInput);
+
+            //   return true
+            // }
+            // return false
+          }
+
+          return formInput.value;
+
+          // const value = formInput.value;
+          // if (Boolean(value)) {
+          //   console.log('non-empty form value');
+          //   console.log(formInput);
+
+          //   return true;
+          // }
+
+          // return false;
+        });
+
+      if (sectionIsFilled && !removeFilled) {
+        // console.log('keep\n');
+        continue;
+      }
+      // console.log('remove\n');
+      removeDuplicatedSection(removeEl);      
+
+      const tbodyId = tbody.id;
+      if (tbodyId && tbodyId.includes('sample-size-section')) {
+        removeDuplicatedSampleSections(removeEl);
+      }
+    }
+  }
+</script>

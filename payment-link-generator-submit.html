@@ -1,0 +1,113 @@
+<!-- MAIN CONTENT -->
+<div class="container-center-horizontal">
+  <div class="flex-row-1">
+
+    <!-- QUOTE INFO -->
+    <div id="quote-info-container">
+
+      <!-- <div class="test-toggle-container">
+        <img class="visually-hidden" id="test-toggle-loading-icon" src="https://media.tenor.com/YtAOA9y7VG0AAAAM/loading.gif" width="20px" alt="Loading..." />
+        <label for="test-mode">Test Mode</label>
+        <input id="test-mode" value="test" type="radio" name="test-toggle" checked>
+        <label for="live-mode">Live Mode</label>
+        <input id="live-mode" value="live" type="radio" name="test-toggle">
+      </div> -->
+      
+      <div class="payment-link-header valign-text-middle lexenddeca-semi-bold-charade-m">
+        GENERATE PAYMENT LINK
+      </div>
+
+      <table id="quote-info-table">
+        <tbody>
+          <tr class="item-group-payment">
+            <td>
+              <label for="quote-number" class="item-label-payment valign-text-middle gothica1-light-charade-14px">Quote No.</label>
+            </td>
+
+            <td>
+              <input type="text" id="quote-number" class="left-form-input valign-text-middle gothica1-light-charade-light quote-input" disabled>
+            </td>
+          </tr>
+
+          <tr class="item-group-payment">
+            <td>
+              <label for="client-name" class="item-label-payment valign-text-middle gothica1-light-charade-14px">Client Name</label>
+            </td>
+
+            <td>
+              <input type="text" id="client-name" class="left-form-input valign-text-middle gothica1-light-charade-light quote-input" disabled>
+            </td>
+          </tr>
+
+          <tr class="item-group-payment">
+            <td>
+              <label for="sidemark" class="item-label-payment valign-text-middle gothica1-light-charade-14px">Sidemark</label>
+            </td>
+
+            <td>
+              <input type="text" id="sidemark" class="left-form-input valign-text-middle gothica1-light-charade-light quote-input" disabled>
+            </td>
+          </tr>
+
+          <tr class="item-group-payment">
+            <td>
+              <label for="requested-deposit" class="item-label-payment valign-text-middle gothica1-light-charade-14px">Requested Deposit</label>
+            </td>
+            <td>
+              <input type="text" id="requested-deposit" class="left-form-input valign-text-middle gothica1-light-charade-light quote-input" placeholder="$0.00" onchange="formatCurrencyInput(this)">
+            </td>
+          </tr>
+
+          <tr class="item-group-payment">
+            <td>
+              <div class="spacer-cell">
+              </div>
+            </td>
+
+            <td>
+              <div class="gen-link-container">
+                <img class="visually-hidden" id="link-generator-loading-icon" src="https://media.tenor.com/YtAOA9y7VG0AAAAM/loading.gif" width="20px" alt="Loading..." />
+                <button id="gen-link-button" class="payment-link-button" disabled>GENERATE LINK</button>
+              </div>
+              
+            </td>
+          </tr>
+
+        </tbody>
+
+        <tbody id="copy-link-section" class="visually-hidden">
+          <tr class="item-group-payment">
+            <td>
+              <label for="payment-link" class="item-label-payment valign-text-middle gothica1-light-charade-14px">Payment Link</label>
+            </td>
+
+            <td>
+              <input type="text" id="payment-link" class="left-form-input valign-text-middle gothica1-light-charade-light" style="cursor: pointer;" disabled>
+            </td>
+          </tr>
+
+          <tr class="item-group-payment">
+            <td>
+              <div class="spacer-cell"></div>
+            </td>
+
+            <td>
+              <button id="copy-link-button" class="payment-link-button">COPY LINK</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+
+    <hr class="vertical-line-left-side">
+
+    <!-- MIDDLE SECTION RUG FORM -->
+    <div class="body-section">
+
+      <iframe id="quote-viewer"></iframe>
+
+    </div>
+
+  </div>
+</div>
